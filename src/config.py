@@ -8,8 +8,8 @@ logger = logging.getLogger("Config")
 WRAPPER_ROOT = (Path(__file__).resolve()).parent
 default_config = '''\
 {
-    // remove the "Norisk Client" text/watermark from uis
-    "remove_watermark" : true,
+    // allow for asset overrides via an asset pack
+    "asset_overrides" : true,
     // the directory this script looks for the minecraft auth token when prism launcher is detected
     "prism_data_dir": "../../..",
     //the path to your app.db from the modrinth launcher
@@ -37,7 +37,7 @@ c = get_config()
 
 LAUNCHER = c.get("force_launcher_type")
 MODRINTH_DATA_PATH = c.get("modrinth_data_dir")
-REMOVE_WATERMARK = c.get("remove_watermark")
+ASSET_OVERRIDE = c.get("asset_overrides")
 PRISM_DATA_DIR = c.get("prism_data_dir")
 FORCE_NEWEST_MODS = c.get("force_newest_mods")
 

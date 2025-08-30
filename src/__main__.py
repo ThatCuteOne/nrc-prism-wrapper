@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
+from pathlib import Path
+import shutil
 import subprocess
+import tempfile
+import zipfile
+import config
 import tasks.get_dependencies as get_dependencies
 import logging
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
@@ -21,6 +26,8 @@ import tasks.install_norisk_version as install_norisk_version
 
 os.makedirs("./mods",exist_ok=True)
 
+ASSET_PATH = "NoRiskClient/assets"
+
 async def download_data(token):
 
     tasks =[
@@ -30,11 +37,25 @@ async def download_data(token):
     ]
     await asyncio.gather(*tasks)
 
+
+def load_default_asset_packs():
+    os.makedirs("nrc_asset_overrides",exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:  
+            with zipfile.ZipFile(config.WRAPPER_ROOT, 'r') as z:
+                z.extractall(temp_dir)
+                shutil.copytree(f"{temp_dir}/assetpacks", "./nrc_asset_overrides", dirs_exist_ok=True)
+
+    except IsADirectoryError:
+        shutil.copytree(f"{config.WRAPPER_ROOT}/assetpacks", "./nrc_asset_overrides", dirs_exist_ok=True)
+
+
 def main():
-    # Check if the token is set. Exit with an error if it's not.
+    if not Path(".nrc-index.json").exists():
+        load_default_asset_packs()
     token = asyncio.run(get_token.main())
     if not token:
-        print("ERROR: Missing Norisk token", file=sys.stderr)
+        logger.exception("ERROR: Missing Norisk token")
         sys.exit(1)
 
     asyncio.run(download_data(token))
