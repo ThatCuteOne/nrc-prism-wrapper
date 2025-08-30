@@ -28,13 +28,20 @@ everything else should happen automaticaly
 
 _NOTE: Currently only the fabric versions are supported(1.21+)_
 
+
+## Assetpacks
+> Asset packs are bascally resource packs but they are only loaded at gamestart and from the "nrc_asset_overrides" directory(in your instance)
+> they need a pack.mcmeta file(can be empty), another caviat is that there currently is no deterministic load order
+
+
+
 ### Todos
 - log steaming into modrinth app(if possible)
 - set modloader version
 - handle assets other then prod
 - verfiy downloads by hash matching with maven repo(http://maven.norisk.gg/repository/norisk-production/gg/norisk/nrc-ui/1.0.78+fabric.1.21.7/nrc-ui-1.0.78+fabric.1.21.7.jar.md5/sha1/sha257/sha512) and modrinth
 - force newest setting(force install newest versions from maven repo or modrinth)
-- full resourcepack override support
+- make asset packs reloadable(idk how)
 
 
 
