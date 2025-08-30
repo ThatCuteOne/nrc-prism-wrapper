@@ -1,7 +1,9 @@
 
+import os
 import json5
 from pathlib import Path
 import logging
+os.makedirs("nrc_asset_overrides",exist_ok=True)
 
 logger = logging.getLogger("Config")
 
