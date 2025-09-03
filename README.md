@@ -6,6 +6,7 @@
 # Features
 - Run [Norisk Client](https://norisk.gg/) trough prism launcher or the modrinth app(linux only)
 - remove norisk client watermark
+- replace any asset via an assetpack(Modules, Emotes,Cosmetics)
 
 ## Requirements:
 - python 3.x+
