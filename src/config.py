@@ -43,7 +43,8 @@ ASSET_OVERRIDE = c.get("asset_overrides")
 PRISM_DATA_DIR = c.get("prism_data_dir")
 FORCE_NEWEST_MODS = c.get("force_newest_mods")
 
-if not LAUNCHER:
+
+if LAUNCHER is None:
     if Path(MODRINTH_DATA_PATH).is_file():
         LAUNCHER = "modrinth"
         logger.info("Detetected Modrinth Launcher")

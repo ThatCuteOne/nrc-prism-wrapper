@@ -1,16 +1,17 @@
 import asyncio
 import hashlib
+import json
 import logging
 import os
+import warnings
+import zipfile
 from pathlib import Path
-from aiofiles import os as aios
-import aiofiles
 import networking.api as api
-import config
 
 logger = logging.getLogger("Assets")
 
-IGNORE_LIST = []
+# assets that are ignored
+IGNORE_LIST = ["nrc-cosmetics/pack.mcmeta"]
 
 ASSET_PATH = "NoRiskClient/assets"
 
@@ -42,30 +43,37 @@ async def calc_hash(file:Path):
     with open(file,'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
 
-async def copy_dir(src,dst):
-    items = await aios.listdir(src)
-    copy_tasks = []
-    for item in items:
-        if not item == "pack.mcmeta":
-            source_path = os.path.join(src,item)
-            destination_path = os.path.join(dst,item)
-            if await aios.path.isdir(source_path):
-                copy_tasks.append(copy_dir(source_path, destination_path))
-            else:
-                copy_tasks.append(copy_file(source_path, destination_path))
-
-    await asyncio.gather(*copy_tasks)
-
-
-async def copy_file(src,dst):
-    dst_dir = os.path.dirname(dst)
-    if not await aios.path.exists(dst_dir):
-        await aios.makedirs(dst_dir, exist_ok=True)
+async def injectIntoJar():
+    '''
+    Injects NRC assets into nrc-core jarfile
+    '''
+    logger.info("Injecting Assets into jarfile")
+    warnings.filterwarnings("ignore", category=UserWarning, module="zipfile")
+    with open(".nrc-index.json") as f:
+        index = json.load(f)
+    for modfile in index:
+        if modfile.get("id") == "nrc-core":
+            core_mod = modfile
+            hash = modfile.get("hash")
+            break
     
-    async with aiofiles.open(src, 'rb') as src_file:
-        async with aiofiles.open(dst, 'wb') as dst_file:
-            content = await src_file.read()
-            await dst_file.write(content)
+    for file in os.listdir("./mods"):
+        fpath = Path(f"./mods/{file}")
+        if fpath.is_file():
+            h = await calc_hash(fpath)
+            if h == hash:
+                source_path = Path("NoRiskClient/assets/nrc-cosmetics/assets")
+                with zipfile.ZipFile(fpath , "a",compression=zipfile.ZIP_DEFLATED) as jar:
+                    for file_path in source_path.rglob('*'):
+                        if file_path.is_file():
+                            rel_path = file_path.relative_to(source_path)
+                            jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
+                            jar.write(str(file_path), jar_path_entry)
+                core_mod["hash"] = await calc_hash(fpath)
+                with open(".nrc-index.json", 'w') as f:
+                    json.dump(index, f, indent=2)
+                break
+
 async def main(nrc_token:str):
     '''
     Verifys and Downloads Assets
@@ -73,7 +81,6 @@ async def main(nrc_token:str):
     Args:
         nrc_token: a valid noriskclient token
     '''
-    logger.info("Verifying Assets")
     metadata = await api.get_asset_metadata("norisk-prod")
     logger.info("Verifying Assets")
     verify_tasks = []
@@ -94,12 +101,3 @@ async def main(nrc_token:str):
         tasks.append(task)
     logger.info("Downloading missing")
     results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    if config.ASSET_OVERRIDE:
-        # TODO make load order deterministic
-        for d in os.listdir("nrc_asset_overrides"):
-             path = Path(f"nrc_asset_overrides/{d}")
-             if path.is_dir():
-                 if Path(path/"pack.mcmeta").exists():
-                     logger.info(f"Loading asset pack: {d}")
-                     await copy_dir(Path(f"nrc_asset_overrides/{d}"),"NoRiskClient")
