@@ -5,8 +5,7 @@
 
 # Features
 - Run [Norisk Client](https://norisk.gg/) trough prism launcher or the modrinth app(linux only)
-- remove norisk client watermark
-- replace any asset via an assetpack(Modules, Emotes,Cosmetics)
+- Full Resourcepack support(modifiy any noriskclient asset you want via a resourcepack)
 
 ## Requirements:
 - python 3.x+
@@ -28,13 +27,6 @@ everything else should happen automaticaly
 
 
 _NOTE: Currently only the fabric versions are supported(1.21+)_
-
-
-## Assetpacks
-> Asset packs are bascally resource packs but they are only loaded at gamestart and from the "nrc_asset_overrides" directory(in your instance)
-> they need a pack.mcmeta file(can be empty), another caviat is that there currently is no deterministic load order
-
-
 
 ### Todos
 - log steaming into modrinth app(if possible)

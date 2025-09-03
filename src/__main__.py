@@ -59,6 +59,7 @@ def main():
         sys.exit(1)
 
     asyncio.run(download_data(token))
+    asyncio.run(get_assets.injectIntoJar())
 
     # Get the original command arguments
     original_args = sys.argv[1:]
