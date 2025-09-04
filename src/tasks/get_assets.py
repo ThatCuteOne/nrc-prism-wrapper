@@ -74,30 +74,33 @@ async def injectIntoJar():
                     json.dump(index, f, indent=2)
                 break
 
-async def main(nrc_token:str):
+async def main(nrc_token:str,nrc_pack:dict):
     '''
     Verifys and Downloads Assets
 
     Args:
         nrc_token: a valid noriskclient token
     '''
-    metadata = await api.get_asset_metadata("norisk-prod")
-    logger.info("Verifying Assets")
-    verify_tasks = []
-    for name, asset_info in metadata.get("objects", {}).items():
-        if name not in IGNORE_LIST:
-            task = verify_asset(
-                name,
-                asset_info
-            )
-            verify_tasks.append(task)
-    results = await asyncio.gather(*verify_tasks)
-    downloads = [result for result in results if result is not None]
+    
+    for assetpack in nrc_pack.get("assets"):
+        metadata = {}
+        metadata = {**metadata, **await api.get_asset_metadata(assetpack)}
+        logger.info("Verifying Assets")
+        verify_tasks = []
+        for name, asset_info in metadata.get("objects", {}).items():
+            if name not in IGNORE_LIST:
+                task = verify_asset(
+                    name,
+                    asset_info
+                )
+                verify_tasks.append(task)
+        results = await asyncio.gather(*verify_tasks)
+        downloads = [result for result in results if result is not None]
 
-    semaphore = asyncio.Semaphore(concurrent_downloads)
-    tasks = []
-    for path, asset_data in downloads:
-        task = api.download_single_asset("norisk-prod",path,asset_data,nrc_token,semaphore)
-        tasks.append(task)
-    logger.info("Downloading missing")
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+        semaphore = asyncio.Semaphore(concurrent_downloads)
+        tasks = []
+        for path, asset_data in downloads:
+            task = api.download_single_asset(assetpack,path,asset_data,nrc_token,semaphore)
+            tasks.append(task)
+        logger.info("Downloading missing")
+        results = await asyncio.gather(*tasks, return_exceptions=True)

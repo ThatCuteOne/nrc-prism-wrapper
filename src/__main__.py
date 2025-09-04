@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-from pathlib import Path
-import shutil
 import subprocess
-import tempfile
-import zipfile
 import config
+from networking import api
 import tasks.get_dependencies as get_dependencies
 import logging
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
@@ -29,30 +26,19 @@ os.makedirs("./mods",exist_ok=True)
 ASSET_PATH = "NoRiskClient/assets"
 
 async def download_data(token):
+    versions = await api.get_norisk_versions()
+    pack =versions.get("packs").get(config.NORISK_PACK)
+    repos = versions.get("repositories")
 
     tasks =[
-        get_assets.main(token),
-        install_norisk_version.main()
+        get_assets.main(token,pack),
+        install_norisk_version.main(pack,repos)
 
     ]
     await asyncio.gather(*tasks)
 
 
-def load_default_asset_packs():
-    os.makedirs("nrc_asset_overrides",exist_ok=True)
-    try:
-        with tempfile.TemporaryDirectory() as temp_dir:  
-            with zipfile.ZipFile(config.WRAPPER_ROOT, 'r') as z:
-                z.extractall(temp_dir)
-                shutil.copytree(f"{temp_dir}/assetpacks", "./nrc_asset_overrides", dirs_exist_ok=True)
-
-    except IsADirectoryError:
-        shutil.copytree(f"{config.WRAPPER_ROOT}/assetpacks", "./nrc_asset_overrides", dirs_exist_ok=True)
-
-
 def main():
-    if not Path(".nrc-index.json").exists():
-        load_default_asset_packs()
     token = asyncio.run(get_token.main())
     if not token:
         logger.exception("ERROR: Missing Norisk token")
@@ -73,7 +59,7 @@ def main():
     
     for arg in original_args:
         new_cmd.append(arg)
-        # When we find the Java executable or main class, inject our property
+        # When we find the Java executable or main class, inject our token arg
         if (arg.endswith('java') or 
             arg == 'net.minecraft.client.main.Main' or 
             arg.endswith('/java') or 
@@ -84,7 +70,6 @@ def main():
     
     if not token_added:
         new_cmd.append(f"-Dnorisk.token={token}")
-    # Execute
     try:
         # windows log output workaround(i hate you billie)
         # TODO for some reason the log reading is very slow and wierd but at least it works
