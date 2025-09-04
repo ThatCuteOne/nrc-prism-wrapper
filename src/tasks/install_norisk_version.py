@@ -130,7 +130,7 @@ async def get_installed_versions():
     return result
 
 
-async def get_compatible_nrc_mods(mc_version):
+async def get_compatible_nrc_mods(mc_version,nrc_pack:dict):
     '''
     Gets mods from norisk api and Filters them for  compatibility with given mc_version
 
@@ -143,12 +143,11 @@ async def get_compatible_nrc_mods(mc_version):
 
     '''
 
-    versions = await api.get_norisk_versions()
-    prod =versions.get("packs").get("norisk-prod")
+
     
     mods = []
 
-    for mod in prod.get("mods"):
+    for mod in nrc_pack.get("mods"):
         if mod.get("compatibility").get(mc_version):
                 mods.append(ModEntry(
                     None,
@@ -163,7 +162,7 @@ async def get_compatible_nrc_mods(mc_version):
                     mod.get("source").get("artifactId")
                     ))
             
-    return mods,versions.get("repositories")
+    return mods
 
 
 async def remove_installed_mods(mods:list[ModEntry],installed_mods:dict) -> tuple[list[ModEntry],list[ModEntry]]:
@@ -231,13 +230,13 @@ async def convert_to_index(mods:list[ModEntry]):
 
 
 
-async def main():
+async def main(nrc_pack:dict,repos):
     '''
     Verifys and installs mod jars
     '''
     mc_version = await get_mc_version()
     logger.info("getting jars")
-    mods,repos = await get_compatible_nrc_mods(mc_version)
+    mods = await get_compatible_nrc_mods(mc_version,nrc_pack)
     installed_mods = await get_installed_versions()
 
     mods, removed = await remove_installed_mods(mods,installed_mods)

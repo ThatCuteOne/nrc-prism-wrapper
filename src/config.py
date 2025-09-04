@@ -19,7 +19,10 @@ default_config = '''\
     //TODO DOES NOT WORK CURRENTLY(force install newest mod versions) 
     "force_newest_mods": false,
     // forces launcher type(mostly used vor development) "null" to disable
-    "force_launcher_type": null
+    "force_launcher_type": null,
+    // Norisk pack to use:
+    // Avaliable Norisk packs: "norisk-bughunter", "norisk-dev" "hypixel-skyblock","mazerunner", "stupid-mod-ideas", "hide-and-seek"
+    "norisk_pack": "norisk-prod"
 }
     '''
 
@@ -42,6 +45,7 @@ MODRINTH_DATA_PATH = c.get("modrinth_data_dir")
 ASSET_OVERRIDE = c.get("asset_overrides")
 PRISM_DATA_DIR = c.get("prism_data_dir")
 FORCE_NEWEST_MODS = c.get("force_newest_mods")
+NORISK_PACK = c.get("norisk_pack")
 
 
 if LAUNCHER is None:
