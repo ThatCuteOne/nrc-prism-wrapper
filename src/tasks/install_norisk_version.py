@@ -265,7 +265,12 @@ async def main(nrc_pack:dict,repos):
         for project_id in result_batch:
                 mod = modrinth_lookup[project_id]
                 for v in result_batch[project_id]:
-                    if "fabric" in v.get("loaders") and (mod.version == v.get("version_number") or mod.version == v.get("id")):
+                    if "fabric" in v.get("loaders") and (mod.version == v.get("version_number") or
+                                                        mod.version == v.get("id") or 
+                                                        mod.version == f"{v.get("version_number")},fabric" or 
+                                                        mod.version == f"{v.get("version_number")},{mc_version}" or
+                                                        (mod.version == f"{v.get("version_number")}-fabric,1.21.7" and mc_version in v.get("game_versions")) # wavy capes woraround 
+                                                    ):
                         for file in v.get("files"):
                             if file.get("primary"):
                                 download_tasks.append(download_jar(
