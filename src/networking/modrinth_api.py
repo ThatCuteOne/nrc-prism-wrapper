@@ -33,7 +33,7 @@ async def get_versions(project,project_slug=None):
                     project: response.json()
                 }
             except httpx.RequestError as e:
-                logger.debug(f"modrinth api request failed: {url} errot")
+                logger.debug(f"modrinth api request failed: {url} error")
                 raise Exception(f"modrinth api request failed: {url}")
             except httpx.TimeoutException as e:
                 logger.debug(f"modrinth api request Timeout: {url}")

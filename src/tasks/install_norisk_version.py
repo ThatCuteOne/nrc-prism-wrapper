@@ -133,7 +133,7 @@ async def get_installed_versions():
 
 async def get_compatible_nrc_mods(mc_version,nrc_pack:dict):
     '''
-    Gets mods from norisk api and Filters them for  compatibility with given mc_version
+    Gets mods from norisk api and Filters them for compatibility with given mc_version
 
     Args:
         mc_version:str
@@ -265,7 +265,7 @@ async def main(nrc_pack:dict,repos):
         for project_id in result_batch:
                 mod = modrinth_lookup[project_id]
                 for v in result_batch[project_id]:
-                    if "fabric" in v.get("loaders") and mod.version == v.get("version_number"):
+                    if "fabric" in v.get("loaders") and (mod.version == v.get("version_number") or mod.version == v.get("id")):
                         for file in v.get("files"):
                             if file.get("primary"):
                                 download_tasks.append(download_jar(

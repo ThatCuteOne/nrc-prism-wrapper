@@ -21,7 +21,7 @@ concurrent_downloads = 10
 async def download_jar(download_url,filename):
     """Downloads jar file from given url"""
     logger = logging.getLogger("Mod Downloader")
-    logger.info(f"Downloading {filename} 🙏 from [{download_url}]")
+    logger.info(f"Downloading {filename} [{download_url}]")
     async with asyncio.Semaphore(concurrent_downloads):
         try:
             async with aiohttp.ClientSession() as client:
