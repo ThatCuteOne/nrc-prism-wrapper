@@ -10,8 +10,6 @@ import config
 from pathlib import Path
 from urllib.parse import urljoin
 import networking.api as api
-import networking.modrinth_api as modrinth
-
 logger = logging.getLogger("Jars Geatherer")
 
 
@@ -258,20 +256,13 @@ async def main(nrc_pack:dict,repos):
     logger.info("getting jars")
     mods = await get_compatible_nrc_mods(mc_version,nrc_pack)
     installed_mods = await get_installed_versions()
-    
     mods, removed = await remove_installed_mods(mods,installed_mods)
-    logger.info(removed)
-
-
     download_tasks = []
-
 
     for mod in mods:
         if mod.source_type == "modrinth":
             url,filename = await build_modrinth_maven_url(mod)
             download_tasks.append(download_jar(url,filename,mod.version,mod.ID,mod.old_file)) 
-            
-
         elif mod.source_type == "maven":
                 url,filename = await build_maven_url(mod,repos)
                 download_tasks.append(download_jar(url,filename,mod.version,mod.ID,mod.old_file)) 
@@ -282,7 +273,7 @@ async def main(nrc_pack:dict,repos):
         index = await asyncio.gather(*download_tasks)
         try:
             index.remove(None)
-        except:
+        except:  # noqa: E722
             pass
         await write_to_index_file(index+existing_mods_index)
     else:

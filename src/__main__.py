@@ -4,11 +4,6 @@ import config
 from networking import api
 import tasks.get_dependencies as get_dependencies
 import logging
-logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
-get_dependencies.check_dependencies()
-
-logger = logging.getLogger("NRC Wrapper")
-
 import asyncio
 import os
 import sys
@@ -16,6 +11,14 @@ from shutil import which
 import tasks.get_token as get_token
 import tasks.get_assets as get_assets
 import tasks.install_norisk_version as install_norisk_version
+
+
+logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
+get_dependencies.check_dependencies()
+
+logger = logging.getLogger("NRC Wrapper")
+
+
 
 # Wrapper script for the NoRisk instance.
 # Prism Launcher will call this script with the original Java command as arguments.
