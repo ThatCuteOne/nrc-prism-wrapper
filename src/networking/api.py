@@ -132,7 +132,8 @@ async def request_server_id():
         
         try:
             response = await client.post(
-                    url
+                    url,
+                    timeout=30
                 )
             if not response.is_success:
                 error_text = response.text
