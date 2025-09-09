@@ -78,8 +78,9 @@ async def download_jar(url,filename,version:str,ID:str, old_file=None):
         index_entry:dict | a dict in the format of the index
     '''
 
-    a = await api.download_jar(url,filename)
-    if a != old_file and a is not None and old_file is not None:
+    await api.download_jar(url,filename)
+    if filename != old_file and old_file is not None:
+        logger.info(f"Deleting {old_file}")
         os.remove(f"./mods/{old_file}")
     # stuffs thats written to index
     return {
