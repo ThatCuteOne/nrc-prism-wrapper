@@ -34,14 +34,11 @@ async def download_jar(download_url,filename):
                         return True
         except aiohttp.ClientResponseError as e:
             if e.status == 404:
-                logger.exception(f"file not found: {download_url}")
-                raise Exception(f"file not found: {download_url}")
+                logger.error(f"file not found[404 error]: {download_url}")
             else:
                 logger.exception(f"HTTP error: {e}")
-                raise Exception(f"HTTP error: {e}")
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            raise Exception(f"Unexpected error: {e}")
 
 
 async def download_single_asset(asset_id: str, path: str, asset_info: Dict,norisk_token: str, semaphore: asyncio.Semaphore) -> None:

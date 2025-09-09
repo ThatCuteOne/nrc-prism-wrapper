@@ -77,17 +77,17 @@ async def download_jar(url,filename,version:str,ID:str, old_file=None):
     Returns:
         index_entry:dict | a dict in the format of the index
     '''
+    if await api.download_jar(url,filename):
+        if filename != old_file and old_file is not None:
+            logger.info(f"Deleting {old_file}")
+            os.remove(f"./mods/{old_file}")
 
-    await api.download_jar(url,filename)
-    if filename != old_file and old_file is not None:
-        logger.info(f"Deleting {old_file}")
-        os.remove(f"./mods/{old_file}")
-    # stuffs thats written to index
-    return {
-        "id": ID,
-        "hash": await calc_hash(f"./mods/{filename}"),
-        "version": version
-    }
+        # stuffs thats written to index
+        return {
+            "id": ID,
+            "hash": await calc_hash(f"./mods/{filename}"),
+            "version": version
+        }
 
 
 async def read_index():
@@ -161,7 +161,8 @@ async def get_compatible_nrc_mods(mc_version,nrc_pack:dict):
                     mod.get("source").get("groupId"),
                     mod.get("source").get("projectId"),
                     mod.get("source").get("artifactId")
-                    ))
+                    )
+                )
             
     return mods
 
@@ -195,6 +196,24 @@ async def write_to_index_file(data:list):
     '''
     with open(".nrc-index.json","w") as f:
         json.dump(data,f,indent=2)
+
+async def build_modrinth_maven_url(artifact:ModEntry):
+    '''
+    builds maven url from ModEntry
+
+    Args:
+        artifact:ModEntry
+        repos: repository refrences
+    Returns:
+        url:download uil
+        filename: name of the file
+    '''
+    
+    filename = f"{artifact.ID}-{artifact.version}.jar"
+    artifact_path = f"maven/modrinth/{artifact.ID}/{artifact.version}/{filename}"
+    return urljoin("https://api.modrinth.com/maven/", artifact_path),filename
+
+
 
 
 async def build_maven_url(artifact:ModEntry,repos):
@@ -239,53 +258,32 @@ async def main(nrc_pack:dict,repos):
     logger.info("getting jars")
     mods = await get_compatible_nrc_mods(mc_version,nrc_pack)
     installed_mods = await get_installed_versions()
-
+    
     mods, removed = await remove_installed_mods(mods,installed_mods)
+    logger.info(removed)
 
 
-    modrinth_api_calls = []
     download_tasks = []
-    modrinth_lookup = {}
 
 
     for mod in mods:
         if mod.source_type == "modrinth":
-            modrinth_lookup[mod.ID] = mod
-            modrinth_lookup[mod.modrinth_id] = mod
+            url,filename = await build_modrinth_maven_url(mod)
+            download_tasks.append(download_jar(url,filename,mod.version,mod.ID,mod.old_file)) 
+            
+
         elif mod.source_type == "maven":
                 url,filename = await build_maven_url(mod,repos)
                 download_tasks.append(download_jar(url,filename,mod.version,mod.ID,mod.old_file)) 
-    for mod in mods:
-        if mod.source_type == "modrinth":
-            modrinth_api_calls.append(modrinth.get_versions(mod.modrinth_id,mod.ID))
 
-    results = await asyncio.gather(*modrinth_api_calls)
-
-    for result_batch in results:
-        for project_id in result_batch:
-                mod = modrinth_lookup[project_id]
-                for v in result_batch[project_id]:
-                    if "fabric" in v.get("loaders") and (mod.version == v.get("version_number") or
-                                                        mod.version == v.get("id") or 
-                                                        mod.version == f"{v.get("version_number")},fabric" or 
-                                                        mod.version == f"{v.get("version_number")},{mc_version}" or
-                                                        (mod.version == f"{v.get("version_number")}-fabric,1.21.7" and mc_version in v.get("game_versions")) # wavy capes woraround 
-                                                    ):
-                        for file in v.get("files"):
-                            if file.get("primary"):
-                                download_tasks.append(download_jar(
-                                    file.get("url"),
-                                    file.get("filename"),
-                                    mod.version,
-                                    mod.ID,
-                                    mod.old_file
-                                ))
-    
     if download_tasks:
         logger.info("Downloading jars")
         existing_mods_index = await convert_to_index(removed)
         index = await asyncio.gather(*download_tasks)
-        
+        try:
+            index.remove(None)
+        except:
+            pass
         await write_to_index_file(index+existing_mods_index)
     else:
         logger.info("No Jars need to be downloaded")
