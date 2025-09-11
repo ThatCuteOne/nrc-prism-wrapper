@@ -74,7 +74,7 @@ async def injectIntoJar():
                     json.dump(index, f, indent=2)
                 break
 
-async def main(nrc_token:str,nrc_pack:dict):
+async def main(nrc_pack:dict):
     '''
     Verifys and Downloads Assets
 
@@ -100,7 +100,7 @@ async def main(nrc_token:str,nrc_pack:dict):
         semaphore = asyncio.Semaphore(concurrent_downloads)
         tasks = []
         for path, asset_data in downloads:
-            task = api.download_single_asset(assetpack,path,asset_data,nrc_token,semaphore)
+            task = api.download_single_asset(assetpack,path,asset_data,semaphore)
             tasks.append(task)
         logger.info("Downloading missing")
         results = await asyncio.gather(*tasks, return_exceptions=True)

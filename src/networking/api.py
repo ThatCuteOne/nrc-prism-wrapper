@@ -41,7 +41,7 @@ async def download_jar(download_url,filename):
             logger.error(f"Unexpected error: {e}")
 
 
-async def download_single_asset(asset_id: str, path: str, asset_info: Dict,norisk_token: str, semaphore: asyncio.Semaphore) -> None:
+async def download_single_asset(asset_id: str, path: str, asset_info: Dict, semaphore: asyncio.Semaphore) -> None:
         """Download a single asset file"""
         logger = logging.getLogger("Asset Downloader")
         async with semaphore:
@@ -52,10 +52,9 @@ async def download_single_asset(asset_id: str, path: str, asset_info: Dict,noris
                 
                 # Download from CDN
                 url = f"https://cdn.norisk.gg/assets/{asset_id}/assets/{path}"
-                headers = {"Authorization": f"Bearer {norisk_token}"}
                 logger.info(f"Downloading: {path_obj.name}")
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url, headers=headers) as response:
+                    async with session.get(url) as response:
                         if response.status == 200:
                             content = await response.read()
                             
@@ -88,9 +87,7 @@ async def get_asset_metadata(asset_id):
                 else:
                     logger.warning(f"Failed to fetch assets: {response.status}")
                     return {}
-        except Exception as e:
-            logger.exception(f"Error fetching assets: {e}")
-            return {}
+
         except asyncio.TimeoutError:
             logger.error("Request timed out")
             return {}
@@ -98,7 +95,7 @@ async def get_asset_metadata(asset_id):
             logger.exception(f"HTTP client error: {e}")
             return {}
         except Exception as e:
-            logger.exception(f"Unexpected error: {e}")
+            logger.exception(f"Error fetching assets: {e}")
             return {}
 
 async def validate_with_norisk_api(username,server_id):

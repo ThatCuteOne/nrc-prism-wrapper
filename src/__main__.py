@@ -28,26 +28,29 @@ os.makedirs("./mods",exist_ok=True)
 
 ASSET_PATH = "NoRiskClient/assets"
 
-async def download_data(token):
+async def download_data():
     versions = await api.get_norisk_versions()
     pack =versions.get("packs").get(config.NORISK_PACK)
     repos = versions.get("repositories")
-
     tasks =[
-        get_assets.main(token,pack),
-        install_norisk_version.main(pack,repos)
+        get_assets.main(pack),
+        install_norisk_version.main(pack,repos),
+        get_token.main()
 
     ]
-    await asyncio.gather(*tasks)
-
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        if result is not None:
+            return result
+    
 
 def main():
-    token = asyncio.run(get_token.main())
-    if not token:
-        logger.exception("ERROR: Missing Norisk token")
-        sys.exit(1)
+    #token = asyncio.run(get_token.main())
+    # if not token:
+    #     logger.exception("ERROR: Missing Norisk token")
+    #     sys.exit(1)
 
-    asyncio.run(download_data(token))
+    token = asyncio.run(download_data())
     asyncio.run(get_assets.injectIntoJar())
 
     # Get the original command arguments
