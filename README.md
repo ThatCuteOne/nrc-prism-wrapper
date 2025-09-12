@@ -28,6 +28,9 @@ everything else should happen automaticaly
 
 _NOTE: Currently only the fabric versions are supported(1.21+)_
 
+You may also want to checkout technicfans wrapper thats written in go(lang) [here](https://github.com/technicfan/nrc-wrapper-go)
+
+
 ### Todos
 - log steaming into modrinth app(if possible)
 - set modloader version
