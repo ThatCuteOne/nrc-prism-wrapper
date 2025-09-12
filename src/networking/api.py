@@ -105,7 +105,7 @@ async def validate_with_norisk_api(username,server_id):
             response = await client.post(
                 url,
                 params={
-                    "force": False,
+                    "force": True,
                     "hwid": hashlib.md5(f"{platform.node()}{uuid.getnode()}{platform.machine()}".encode()).hexdigest(),
                     "username": username,
                     "server_id": server_id
@@ -192,7 +192,6 @@ async def join_server_session(
         except httpx.RequestError as e:
             logger.debug(f"API request failed: {e}")
             raise Exception(f"Minecraft API request failed: {e}")
-        
 
 async def get_norisk_versions():
     url = f"{NORISK_API_URL}/launcher/modpacks"

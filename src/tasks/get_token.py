@@ -21,9 +21,8 @@ async def is_token_expired(token):
     returns:
         True|False
     '''
-    token_byte = token.encode('utf-8')
     decoded = jwt.decode(
-             token_byte,
+             token,
             options={"verify_signature": False},
             algorithms=["HS256", "none"]
         )
@@ -46,14 +45,14 @@ async def read_token_from_file(path,uuid):
     Returns:
         Stored token for given profile id: str
     '''
-    if Path(f"{path}norisk_data.json").is_file():
-        with open(f"{path}norisk_data.json", "r") as f:
+    if Path(f"{path}/norisk_data.json").is_file():
+        with open(f"{path}/norisk_data.json", "r") as f:
             data = json.load(f)
             if uuid in data:
                 return data[uuid]
+
 async def get_modrinth_data():
     data = duckdb.connect(config.MODRINTH_DATA_PATH,read_only=True)
-
     data = data.sql("SELECT access_token,username,uuid FROM minecraft_users where active = 1").fetchall()
     return data[0]
 
@@ -92,7 +91,6 @@ async def write_token(token:str,player_uuid,path):
     data[str(player_uuid)] = token
     with open(f"{path}/norisk_data.json", "w") as f:
         f.write(json.dumps(data,indent=2))
-
 
 
 async def main():

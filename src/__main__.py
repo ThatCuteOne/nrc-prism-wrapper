@@ -45,11 +45,6 @@ async def download_data():
     
 
 def main():
-    #token = asyncio.run(get_token.main())
-    # if not token:
-    #     logger.exception("ERROR: Missing Norisk token")
-    #     sys.exit(1)
-
     token = asyncio.run(download_data())
     asyncio.run(get_assets.injectIntoJar())
 
