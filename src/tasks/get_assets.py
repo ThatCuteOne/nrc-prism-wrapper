@@ -51,27 +51,36 @@ async def injectIntoJar():
     warnings.filterwarnings("ignore", category=UserWarning, module="zipfile")
     with open(".nrc-index.json") as f:
         index = json.load(f)
-    for modfile in index:
-        if modfile.get("id") == "nrc-core":
-            core_mod = modfile
-            hash = modfile.get("hash")
-            break
+
+    core_mod = next((mod for mod in index if mod.get("id") == "nrc-core"), None)
+    source_path = Path("NoRiskClient/assets/nrc-cosmetics/assets")
+    files_to_add = []
+    for file_path in source_path.rglob('*'):
+        if file_path.is_file():
+            rel_path = file_path.relative_to(source_path)
+            jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
+            files_to_add.append((file_path, jar_path_entry))
+
     
-    for file in os.listdir("./mods"):
-        fpath = Path(f"./mods/{file}")
-        if fpath.is_file():
-            h = await calc_hash(fpath)
-            if h == hash:
-                source_path = Path("NoRiskClient/assets/nrc-cosmetics/assets")
-                with zipfile.ZipFile(fpath , "a",compression=zipfile.ZIP_DEFLATED) as jar:
-                    for file_path in source_path.rglob('*'):
-                        if file_path.is_file():
-                            rel_path = file_path.relative_to(source_path)
-                            jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
-                            jar.write(str(file_path), jar_path_entry)
-                core_mod["hash"] = await calc_hash(fpath)
+    mods_dir = Path("./mods")
+    target_hash = core_mod.get("hash")
+    for file in mods_dir.glob("*.jar"):
+            if await calc_hash(file) == target_hash:
+                with zipfile.ZipFile(file , "a",compression=zipfile.ZIP_DEFLATED) as jar:
+                    logger.info("writing")
+
+                    file_data = []
+                    for file_path, jar_path in files_to_add:
+                        with open(file_path, 'rb') as f:
+                            file_data.append((jar_path, f.read()))
+
+                    for jar_path, content in file_data:
+                        jar.writestr(jar_path, content)
+                
+                core_mod["hash"] = await calc_hash(file)
                 with open(".nrc-index.json", 'w') as f:
                     json.dump(index, f, indent=2)
+                logger.info("done Writing!")
                 break
 
 async def main(nrc_pack:dict):
