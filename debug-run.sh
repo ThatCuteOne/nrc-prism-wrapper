@@ -1,1 +1,1 @@
-python ./src/__main__.py --prism-data-path "./"
+python ./src/__main__.py --prism-data-path "./" -l "prism"
