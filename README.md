@@ -33,7 +33,6 @@ You may also want to checkout technicfans wrapper thats written in go(lang) [her
 
 ### Todos
 - add retry for api requests
-- make config via run args instead of files
 - set dev enviroment via env variable
 - log steaming into modrinth app(if possible)
 - ~~set modloader version~~(not _really_ needed)
