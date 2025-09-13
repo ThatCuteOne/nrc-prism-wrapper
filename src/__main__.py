@@ -49,7 +49,7 @@ def main():
     asyncio.run(get_assets.injectIntoJar())
 
     # Get the original command arguments
-    original_args = sys.argv[1:]
+    original_args = config.unknown_args
     
     if which('obs-gamecapture') is not None:
         new_cmd = ["obs-gamecapture"]

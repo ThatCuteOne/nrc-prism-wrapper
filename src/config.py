@@ -1,57 +1,35 @@
 
+import argparse
 import os
-import json5
 from pathlib import Path
 import logging
 os.makedirs("nrc_asset_overrides",exist_ok=True)
 
 logger = logging.getLogger("Config")
 
-WRAPPER_ROOT = (Path(__file__).resolve()).parent
-default_config = '''\
-{
-    // allow for asset overrides via an asset pack
-    "asset_overrides" : true,
-    // the directory this script looks for the minecraft auth token when prism launcher is detected
-    "prism_data_dir": "../../..",
-    //the path to your app.db from the modrinth launcher
-    "modrinth_data_dir": "../../app.db",
-    //TODO DOES NOT WORK CURRENTLY(force install newest mod versions) 
-    "force_newest_mods": false,
-    // forces launcher type(mostly used vor development) "null" to disable
-    "force_launcher_type": null,
-    // Norisk pack to use:
-    // Avaliable Norisk packs: "norisk-bughunter", "norisk-dev" "hypixel-skyblock","mazerunner", "stupid-mod-ideas", "hide-and-seek"
-    "norisk_pack": "norisk-prod"
-}
-    '''
+parser = argparse.ArgumentParser(description='NRC Wrapper for third party launchers')
+parser.add_argument("-l","--launcher", type=str,help="Overrides the automatic launcher detection\nOptions: prism | modrinth")
+parser.add_argument("--modrinth-data-path",type=str,default="../../",help="path to the dir that contains app.db")
+parser.add_argument("--prism-data-path",type=str,default="../../..",help="path to the dir that contains accounts.json")
+parser.add_argument("-p","--norisk-pack",type=str,default="norisk-prod",help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
 
-def get_config()-> dict:
-    try:
-        with open(f"{WRAPPER_ROOT.parent}/config.jsonc","r") as f:
-            config = json5.load(f)
-    except FileNotFoundError:
-        config = json5.loads(default_config)
-        with open(f"{WRAPPER_ROOT.parent}/config.jsonc","w") as f:
-            f.write(default_config)
+args, unknown_args = parser.parse_known_args()
 
-
-    return config
-
-c = get_config()
-
-LAUNCHER = c.get("force_launcher_type")
-MODRINTH_DATA_PATH = c.get("modrinth_data_dir")
-ASSET_OVERRIDE = c.get("asset_overrides")
-PRISM_DATA_DIR = c.get("prism_data_dir")
-FORCE_NEWEST_MODS = c.get("force_newest_mods")
-NORISK_PACK = c.get("norisk_pack")
-
+LAUNCHER = args.launcher
+MODRINTH_DATA_DIR = args.modrinth_data_path
+PRISM_DATA_DIR = args.prism_data_path
+NORISK_PACK = args.norisk_pack
 
 if LAUNCHER is None:
-    if Path(MODRINTH_DATA_PATH).is_file():
+    if Path(MODRINTH_DATA_DIR + "/app.db").is_file():
         LAUNCHER = "modrinth"
         logger.info("Detetected Modrinth Launcher")
     else:
         LAUNCHER = "prism"
         logger.info("Detetected Prism Launcher")
+if LAUNCHER == "modrinth":
+    DATA_DIR = MODRINTH_DATA_DIR
+elif LAUNCHER == "prism":
+    DATA_DIR = PRISM_DATA_DIR
+else:
+    raise Exception("Invalid Launcher type")
