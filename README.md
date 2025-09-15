@@ -15,8 +15,7 @@ On some systems(debain based for example) you may need to install the dependenci
 
 
 # Usage
-1. You need to have logged into the default NRC(Norisk Client) Launcher at least once.
-2. Download the nrc-wrapper.pyz from the [releases page](https://github.com/ThatCuteOne/nrc-prism-wrapper/releases)
+1. Download the nrc-wrapper.pyz from the [releases page](https://github.com/ThatCuteOne/nrc-prism-wrapper/releases)
 2. Go into Prism(multimc may also work) edit an instance, go to **Settings>Custom Commands**
 3. In "Wrapper command" Enter:
 ```
