@@ -1,5 +1,6 @@
 
 import argparse
+from enum import Flag
 import os
 from pathlib import Path
 import logging
@@ -12,9 +13,11 @@ parser.add_argument("-l","--launcher", type=str,help="Overrides the automatic la
 parser.add_argument("--modrinth-data-path",type=str,default="../../",help="path to the dir that contains app.db")
 parser.add_argument("--prism-data-path",type=str,default="../../..",help="path to the dir that contains accounts.json")
 parser.add_argument("-p","--norisk-pack",type=str,default="norisk-prod",help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
+parser.add_argument("-f","--fast-launch",default=False,action="store_const",const=True,help="disables jar injection for faster launch speeds")
 
 args, unknown_args = parser.parse_known_args()
 
+FAST_LAUNCH = args.fast_launch
 LAUNCHER = args.launcher
 MODRINTH_DATA_DIR = args.modrinth_data_path
 PRISM_DATA_DIR = args.prism_data_path
