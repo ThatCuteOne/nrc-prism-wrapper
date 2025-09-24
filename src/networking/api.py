@@ -9,6 +9,7 @@ import uuid
 import aiofiles
 import aiohttp
 import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 
 logger = logging.getLogger("Minecraft/Norisk API")
@@ -142,7 +143,7 @@ async def request_server_id():
             logger.debug(f"Norisk API request failed: {e}")
             raise Exception(f"Norisk API request failed: {e}")
 
-
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def join_server_session(
     access_token: str,
     selected_profile: str,
@@ -192,7 +193,7 @@ async def join_server_session(
         except httpx.RequestError as e:
             logger.debug(f"API request failed: {e}")
             raise Exception(f"Minecraft API request failed: {e}")
-
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def get_norisk_versions():
     url = f"{NORISK_API_URL}/launcher/modpacks"
     async with httpx.AsyncClient() as client:
@@ -204,10 +205,12 @@ async def get_norisk_versions():
             
             if not response.is_success:
                 error_text = response.text
-                logger.debug(f"failed to get version profiles from norisk api: {error_text}")
+                logger.error(f"failed to get version profiles from norisk api: {error_text}")
                 raise Exception(f"failed to get version profiles from norisk api: {error_text}")
             
             return response.json()
         except httpx.RequestError as e:
-            logger.debug(f"Norisk API request failed: {e}")
+            logger.error(f"Norisk API request failed: {e}")
             raise Exception(f"Norisk API request failed: {e}")
+        except httpx.TimeoutException as e:
+            logger.error(f"Norisk API request timed out: {e}")
