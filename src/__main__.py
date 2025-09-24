@@ -50,8 +50,9 @@ def main():
     if not config.FAST_LAUNCH:
         try:
             os.remove("NoRiskClient/assets/nrc-cosmetics/pack.mcmeta")
-        finally:
-            asyncio.run(get_assets.injectIntoJar())
+        except:  # noqa: E722
+            pass
+        asyncio.run(get_assets.injectIntoJar())
     else:
         logger.info("Skipping jar injection!")
 
