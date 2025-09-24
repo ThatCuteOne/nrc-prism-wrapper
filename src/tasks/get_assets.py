@@ -7,11 +7,15 @@ import warnings
 import zipfile
 from pathlib import Path
 import networking.api as api
+import config
 
 logger = logging.getLogger("Assets")
 
 # assets that are ignored
-IGNORE_LIST = ["nrc-cosmetics/pack.mcmeta"]
+if not config.FAST_LAUNCH:
+    IGNORE_LIST = ["nrc-cosmetics/pack.mcmeta"]
+else:
+    IGNORE_LIST = []
 
 ASSET_PATH = "NoRiskClient/assets"
 
