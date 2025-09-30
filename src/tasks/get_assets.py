@@ -3,7 +3,6 @@ import hashlib
 import json
 import logging
 import os
-import warnings
 import zipfile
 from pathlib import Path
 import networking.api as api
@@ -23,7 +22,6 @@ finally:
 
 concurrent_downloads = 20
 async def verify_asset(path,data):
-
     file_path = Path(f"{ASSET_PATH}/{path}")
     if file_path.is_file():
         local_hash = await calc_hash(file_path)
@@ -48,7 +46,6 @@ async def injectIntoJar():
     Injects NRC assets into nrc-core jarfile
     '''
     logger.info("Injecting Assets into jarfile")
-    warnings.filterwarnings("ignore", category=UserWarning, module="zipfile")
     with open(".nrc-index.json") as f:
         index = json.load(f)
 
@@ -66,7 +63,7 @@ async def injectIntoJar():
     target_hash = core_mod.get("hash")
     for file in mods_dir.glob("*.jar"):
             if await calc_hash(file) == target_hash:
-                with zipfile.ZipFile(file , "a",compression=zipfile.ZIP_DEFLATED) as jar:
+                with zipfile.ZipFile(file , "w",compression=zipfile.ZIP_DEFLATED) as jar:
                     logger.info("writing")
 
                     file_data = []
@@ -86,9 +83,6 @@ async def injectIntoJar():
 async def main(nrc_pack:dict):
     '''
     Verifys and Downloads Assets
-
-    Args:
-        nrc_token: a valid noriskclient token
     '''
     
     for assetpack in nrc_pack.get("assets"):
@@ -111,5 +105,8 @@ async def main(nrc_pack:dict):
         for path, asset_data in downloads:
             task = api.download_single_asset(assetpack,path,asset_data,semaphore)
             tasks.append(task)
-        logger.info("Downloading missing")
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        if tasks:
+            logger.info("Downloading missing")
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+        else:
+            logger.info("All assets are up to date")
