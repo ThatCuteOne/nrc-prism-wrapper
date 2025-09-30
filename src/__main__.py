@@ -46,7 +46,16 @@ async def download_data():
 
 def main():
     token = asyncio.run(download_data())
-    asyncio.run(get_assets.injectIntoJar())
+
+    if not config.FAST_LAUNCH:
+        try:
+            os.remove("NoRiskClient/assets/nrc-cosmetics/pack.mcmeta")
+        except:  # noqa: E722
+            pass
+        asyncio.run(get_assets.injectIntoJar())
+    else:
+        logger.info("Skipping jar injection!")
+
 
     # Get the original command arguments
     original_args = config.unknown_args
