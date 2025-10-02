@@ -148,17 +148,21 @@ async def get_compatible_nrc_mods(mc_version,nrc_pack:dict):
 
     for mod in nrc_pack.get("mods"):
         if mod.get("compatibility").get(mc_version):
+                if mod.get("compatibility").get(mc_version).get("fabric").get("source"):
+                    source = mod.get("compatibility").get(mc_version).get("fabric").get("source")
+                else:
+                    source = mod.get("source")
                 mods.append(ModEntry(
                     None,
                     mod.get("compatibility").get(mc_version).get("fabric").get("identifier"),
                     mod.get("id"),
                     None,
                     None,
-                    mod.get("source").get("type"),
-                    mod.get("source").get("repositoryRef"),
-                    mod.get("source").get("groupId"),
-                    mod.get("source").get("projectId"),
-                    mod.get("source").get("artifactId")
+                    source.get("type"),
+                    source.get("repositoryRef"),
+                    source.get("groupId"),
+                    source.get("projectId"),
+                    source.get("artifactId")
                     )
                 )
             
