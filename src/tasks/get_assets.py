@@ -80,12 +80,12 @@ async def injectIntoJar():
                 logger.info("done Writing!")
                 break
 
-async def main(nrc_pack:dict):
+async def main(asset_packs):
     '''
     Verifys and Downloads Assets
     '''
     
-    for assetpack in nrc_pack.get("assets"):
+    for assetpack in asset_packs:
         metadata = {}
         metadata = {**metadata, **await api.get_asset_metadata(assetpack)}
         logger.info("Verifying Assets")

@@ -10,7 +10,7 @@ import sys
 from shutil import which
 import tasks.get_token as get_token
 import tasks.get_assets as get_assets
-import tasks.install_norisk_version as install_norisk_version
+import tasks.install_norisk_mods as install_norisk_mods
 
 
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
@@ -20,21 +20,33 @@ logger = logging.getLogger("NRC Wrapper")
 
 
 
-# Wrapper script for the NoRisk instance.
-# Prism Launcher will call this script with the original Java command as arguments.
-# This script adds the -D property, downloads assets, mods and then runs the command.
+# Wrapper script for the NoRisk Client.
+# This script adds the -D property, downloads assets, mods and then runs the game start command.
 
 os.makedirs("./mods",exist_ok=True)
 
 ASSET_PATH = "NoRiskClient/assets"
+def remove_duplicates_by_keys(dict_list, keys):
+    seen = set()
+    unique_dicts = []
+    
+    for d in dict_list:
+        # Create a tuple of values for the specified keys
+        key_tuple = tuple(d[key] for key in keys)
+        if key_tuple not in seen:
+            seen.add(key_tuple)
+            unique_dicts.append(d)
+    
+    return unique_dicts
 
 async def download_data():
     versions = await api.get_norisk_versions()
     pack =versions.get("packs").get(config.NORISK_PACK)
     repos = versions.get("repositories")
+    mods, assets = await get_data(pack,versions)
     tasks =[
-        get_assets.main(pack),
-        install_norisk_version.main(pack,repos),
+        get_assets.main(assets),
+        install_norisk_mods.main(remove_duplicates_by_keys(mods,["id"]),repos),
         get_token.main()
 
     ]
@@ -42,7 +54,35 @@ async def download_data():
     for result in results:
         if result is not None:
             return result
-    
+
+
+
+async def get_data(pack,versions):
+    '''
+    returns a list of all remote mods and asset-packs that need to be installed
+    '''  
+    def filter_none(items):
+        return [item for item in items if item is not None] if items else []
+
+    mods:list = pack.get("mods",[])
+    assets:list = pack.get("assets",[])
+    inheritsFrom = pack.get("inheritsFrom")
+    if inheritsFrom is None:
+        inheritsFrom = []
+    for parent_pack_name in inheritsFrom:
+        parent_pack = versions.get("packs",[]).get(parent_pack_name)
+        if not parent_pack:
+            continue
+        assets.extend(parent_pack.get("assets",[]))
+        mods.extend(parent_pack.get("mods",[]))
+        inherited_mods,inherited_assets = await get_data(parent_pack, versions)
+        mods.extend(inherited_mods)
+        assets.extend(inherited_assets)
+
+    return filter_none(mods),filter_none(assets)
+
+
+
 
 def main():
     token = asyncio.run(download_data())
@@ -50,25 +90,25 @@ def main():
 
     # Get the original command arguments
     original_args = config.unknown_args
-    
+
     if which('obs-gamecapture') is not None:
         new_cmd = ["obs-gamecapture"]
     else:
         new_cmd = []
-    
+
     token_added = False
-    
+
     for arg in original_args:
         new_cmd.append(arg)
         # When we find the Java executable or main class, inject our token arg
-        if (arg.endswith('java') or 
-            arg == 'net.minecraft.client.main.Main' or 
-            arg.endswith('/java') or 
+        if (arg.endswith('java') or
+            arg == 'net.minecraft.client.main.Main' or
+            arg.endswith('/java') or
             arg.endswith('\\java.exe') or
             arg.endswith('javaw.exe')) and not token_added:
             new_cmd.append(f"-Dnorisk.token={token}")
             token_added = True
-    
+
     if not token_added:
         new_cmd.append(f"-Dnorisk.token={token}")
     try:

@@ -35,7 +35,7 @@ async def download_jar(download_url,filename):
                         return True
         except aiohttp.ClientResponseError as e:
             if e.status == 404:
-                logger.error(f"file not found[404 error]: {download_url}")
+                logger.error(f"file not found[404 error]: {download_url} ❌")
             else:
                 logger.exception(f"HTTP error: {e}")
         except Exception as e:

@@ -1,1 +1,1 @@
-python ./src/__main__.py --prism-data-path "./" -l "prism" -p "norisk-bughunter"
+python ./src/__main__.py --prism-data-path "./" -l "prism" -p "hypixel-skyblock"

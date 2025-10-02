@@ -37,7 +37,7 @@ You may also want to checkout technicfans wrapper thats written in go(lang) [her
 - log steaming into modrinth app(if possible)
 - ~~set modloader version~~(not _really_ needed)
 - verfiy downloads by hash matching with maven repo(http://maven.norisk.gg/repository/norisk-production/gg/norisk/nrc-ui/1.0.78+fabric.1.21.7/nrc-ui-1.0.78+fabric.1.21.7.jar.md5/sha1/sha257/sha512) and modrinth
-- force newest setting(force install newest versions from maven repo or modrinth)
+- ~~force newest setting(force install newest versions from maven repo or modrinth)~~ just use "norisk-bughunter"
 
 
 
