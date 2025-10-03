@@ -45,7 +45,7 @@ async def download_data():
     repos = versions.get("repositories")
     mods, assets = await get_data(pack,versions)
     tasks =[
-        get_assets.main(assets),
+        get_assets.run(assets),
         jars.main(remove_duplicates_by_keys(mods,["id"]),repos),
         get_token.main()
 
