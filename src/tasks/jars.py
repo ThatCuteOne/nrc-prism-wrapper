@@ -11,6 +11,8 @@ from networking import api
 
 logger = logging.getLogger("Mod processor")
 
+os.makedirs("mods",exist_ok=True)
+
 async def calc_hash(file:Path):
     '''
     Calculates the md5 hash for given path
@@ -22,11 +24,12 @@ async def calc_hash(file:Path):
         return hashlib.md5(f.read()).hexdigest()
 repos : dict
 local_files = {}
-for f in os.scandir():
+for f in os.scandir("./mods"):
     if f.name.endswith(".jar") or f.name.endswith(".jar.disabled"):
-            local_files[calc_hash(f)] = {
-                "filename" : f
-            }
+            with open(f,'rb') as file:
+                local_files[hashlib.md5(file.read()).hexdigest()] = {
+                    "filename" : f
+                }
 
 @dataclass
 class MavenSource():
@@ -188,10 +191,10 @@ async def main(mods,repositories):
         if mod is None:
             continue
         for index_entry in index:
-            if mod.ID == index_entry.get("id"):
-                mod.local_mod = await index_to_modclass(index_entry)
-                mod_classes.append(mod)
-                break
+            if local_files.get(index_entry.get("hash")):
+                if mod.ID == index_entry.get("id"):
+                    mod.local_mod = await index_to_modclass(index_entry)
+                    break
 
         mod_classes.append(mod)
         tasks.append(mod.process())
