@@ -58,27 +58,41 @@ async def injectIntoJar():
             jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
             files_to_add.append((file_path, jar_path_entry))
 
-    
     mods_dir = Path("./mods")
     target_hash = core_mod.get("hash")
+    
     for file in mods_dir.glob("*.jar"):
-            if await calc_hash(file) == target_hash:
-                with zipfile.ZipFile(file , "w",compression=zipfile.ZIP_DEFLATED) as jar:
-                    logger.info("writing")
-
-                    file_data = []
-                    for file_path, jar_path in files_to_add:
-                        with open(file_path, 'rb') as f:
-                            file_data.append((jar_path, f.read()))
-
-                    for jar_path, content in file_data:
-                        jar.writestr(jar_path, content)
+        if await calc_hash(file) == target_hash:
+            temp_jar_path = file.with_suffix('.temp.jar')
+            
+            try:
+                with zipfile.ZipFile(file, 'r') as original_jar:
+                    with zipfile.ZipFile(temp_jar_path, 'w', compression=zipfile.ZIP_DEFLATED) as updated_jar:
+                        logger.info("Updating JAR file")
+                        
+                        assets_to_replace = {jar_path for _, jar_path in files_to_add}
+                        for item in original_jar.infolist():
+                            if item.filename not in assets_to_replace:
+                                updated_jar.writestr(item, original_jar.read(item.filename))
+                        
+                        for file_path, jar_path in files_to_add:
+                            with open(file_path, 'rb') as f:
+                                updated_jar.writestr(jar_path, f.read())
+                
+                file.unlink()
+                temp_jar_path.rename(file)
                 
                 core_mod["hash"] = await calc_hash(file)
                 with open(".nrc-index.json", 'w') as f:
                     json.dump(index, f, indent=2)
-                logger.info("done Writing!")
+                logger.info("Successfully updated JAR file!")
                 break
+                
+            except Exception as e:
+                if temp_jar_path.exists():
+                    temp_jar_path.unlink()
+                logger.error(f"Error updating JAR: {e}")
+                raise
 
 async def run(asset_packs):
     assets = list(set(asset_packs))

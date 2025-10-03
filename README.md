@@ -31,7 +31,6 @@ You may also want to checkout technicfans wrapper thats written in go(lang) [her
 
 
 ### Todos
-- support for nrc-packs that inherit from other packs
 - run arg for disabling jar injection
 - set dev enviroment via env variable
 - log steaming into modrinth app(if possible)

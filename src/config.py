@@ -6,25 +6,49 @@ from pathlib import Path
 import logging
 import duckdb
 
-def get_mc_version()-> str:
+def get_instance_data()-> tuple[str,str,str]:
     '''
     Reads the installed Minecraft Version for the current instance
 
     Returns:
-        minecraft_version:str
+        tuple[<minecraft_version>,<mod_loader>,<mod_loader_version>]
     '''
+    minecraft_version : str
+    loader: str
+    loader_version:str
+
     if LAUNCHER == "prism":
         with open("../mmc-pack.json") as f:
             mmc_pack = json.load(f)
             for component in mmc_pack.get("components"):
                 if component.get("uid") == "net.minecraft":
-                    return component.get("version")
+                    minecraft_version = component.get("version")
+                if component.get("uid") == "net.fabricmc.fabric-loader":
+                    loader = "fabric"
+                    loader_version = component.get("version")
+                elif component.get("uid") == "net.neoforged":
+                    loader = "neoforge" 
+                    loader_version = component.get("version")
+                elif component.get("uid") == "net.minecraftforge":
+                    loader = "forge" 
+                    loader_version = component.get("version")
+                elif component.get("uid") == "net.minecraftforge":
+                    loader = "forge" 
+                    loader_version = component.get("version")
+                elif component.get("uid") == "org.quiltmc.quilt-loader":
+                    loader = "quilt" 
+                    loader_version = component.get("version")
+        return minecraft_version,loader,loader_version
     else:
         try:
             data = duckdb.connect(DATA_DIR/ "app.db",read_only=True)
             current_dir_name = Path(os.getcwd()).name
-            data = data.sql(f"SELECT game_version FROM profiles WHERE path = '{current_dir_name}'").fetchall()
-            return data[0][0]
+            result = data.sql(f"SELECT mod_loader, mod_loader_version, game_version FROM profiles WHERE path = '{current_dir_name}'").fetchall()
+            if result:
+                mod_loader, mod_loader_version, game_version = result[0]
+                return game_version,mod_loader, mod_loader_version
+            else:
+                raise Exception(f"No profile found for path: {current_dir_name} in database")
         except Exception as e:
             raise Exception(e)
 
@@ -60,4 +84,4 @@ else:
     raise Exception("Invalid Launcher type")
 
 
-MINECRAFT_VERSION = get_mc_version()
+MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()

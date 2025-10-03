@@ -39,9 +39,29 @@ def remove_duplicates_by_keys(dict_list, keys):
     
     return unique_dicts
 
+async def pack_compatible(pack):
+    compatible_versions = set()
+    for m in pack.get("mods"):
+        for v in m.get("compatibility"):
+            compatible_versions.add(v)
+    
+    if config.MINECRAFT_VERSION in compatible_versions:
+        if pack.get("loaderPolicy"): # TODO handle if a pack inherits loaders from other pack(the whole nested pack managment probably needs a rewrite/drastic improvement)
+            if pack.get("loaderPolicy").get("default").get(config.LOADER):
+                # TODO loader version validation
+                pass
+            else:
+                logger.error(f"Pack \"{pack.get("displayName")}\" isnt compatible with \"{config.LOADER}\"\nPlease Install \"{pack.get("loaderPolicy").get("default")}\"")
+                sys.exit(1)
+    else:
+        logger.error(f"Pack \"{pack.get("displayName")}\" isnt compatible with \"{config.MINECRAFT_VERSION}\"\nAvalible versions for this pack: {compatible_versions}")
+        sys.exit(1)
+
+
 async def download_data():
     versions = await api.get_norisk_versions()
-    pack =versions.get("packs").get(config.NORISK_PACK)
+    pack = versions.get("packs").get(config.NORISK_PACK)
+    await pack_compatible(pack)
     repos = versions.get("repositories")
     mods, assets = await get_data(pack,versions)
     tasks =[
