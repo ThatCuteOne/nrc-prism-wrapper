@@ -11,7 +11,6 @@ import sys
 from shutil import which
 import tasks.get_token as get_token
 import tasks.get_assets as get_assets
-import tasks.install_norisk_mods as install_norisk_mods
 
 
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')

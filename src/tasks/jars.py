@@ -56,25 +56,32 @@ class ModClass():
     
 
     async def download(self):
-        if await api.download_jar(self.url,self.filename):
-            if self.local_mod:
-                old_file:os.DirEntry = local_files.get(self.local_mod.sha)
-                if old_file and old_file.is_file():
-                    os.remove(old_file)
-        
-            self.sha = await calc_hash(f"mods/{self.filename}")
-            self.download_success = True
-
+        for u in self.url:
+            if await api.download_jar(u,self.filename):
+                if self.local_mod:
+                    old_file:os.DirEntry = local_files.get(self.local_mod.sha)
+                    if old_file and old_file.is_file():
+                        os.remove(old_file)
+            
+                self.sha = await calc_hash(f"mods/{self.filename}")
+                self.download_success = True
+                break
+            else:
+                continue
+            
 
 
     async def build_url(self):
 
         if isinstance(self.source , ModrinthSource):
-            filename = f"{self.source.projectSlug}-{self.version_identifier}.jar"
-            self.filename = filename
-            artifact_path = f"maven/modrinth/{self.ID}/{self.version_identifier}/{filename}"
+            filename = f"{self.source.projectId}-{self.version_identifier}.jar"
+            artifact_path = f"maven/modrinth/{self.source.projectId}/{self.version_identifier}/{filename}"
 
-            self.url = urljoin("https://api.modrinth.com/maven/", artifact_path)
+            self.url = [urljoin("https://api.modrinth.com/maven/", artifact_path)]
+
+            self.filename = f"{self.source.projectSlug}-{self.version_identifier}.jar"
+            artifact_path = f"maven/modrinth/{self.source.projectSlug}/{self.version_identifier}/{self.filename}"
+            self.url.append(urljoin("https://api.modrinth.com/maven/", artifact_path))
 
         elif isinstance(self.source , MavenSource):
             group_path = self.source.groupId.replace('.', '/')
@@ -82,7 +89,7 @@ class ModClass():
             self.filename = filename
             artifact_path = f"{group_path}/{self.source.artifactId}/{self.version_identifier}/{filename}"
 
-            self.url = urljoin(repos.get(self.source.repositoryRef), artifact_path)
+            self.url = [urljoin(repos.get(self.source.repositoryRef), artifact_path)]
     
     async def process(self):
         if self.local_mod:
