@@ -2,6 +2,7 @@
 import subprocess
 import config
 from networking import api
+from tasks import jars
 import tasks.get_dependencies as get_dependencies
 import logging
 import asyncio
@@ -46,7 +47,7 @@ async def download_data():
     mods, assets = await get_data(pack,versions)
     tasks =[
         get_assets.main(assets),
-        install_norisk_mods.main(remove_duplicates_by_keys(mods,["id"]),repos),
+        jars.main(remove_duplicates_by_keys(mods,["id"]),repos),
         get_token.main()
 
     ]

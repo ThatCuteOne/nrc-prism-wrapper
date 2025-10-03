@@ -27,6 +27,10 @@ class ModEntry():
     maven_id :str
     modrinth_slug:str
 
+async def new_modEntry(mod:dict):
+    pass
+
+
 async def calc_hash(file:Path):
     '''
     Calculates the md5 hash for given path
@@ -226,8 +230,6 @@ async def build_modrinth_maven_url(artifact:ModEntry):
     '''
     
     # this works for all
-    # filename = f"{artifact.modrinth_slug}-{artifact.version}.jar"
-    # artifact_path = f"maven/modrinth/{artifact.ID}/{artifact.version}/{filename}"
     filename = f"{artifact.modrinth_slug}-{artifact.version}.jar"
     artifact_path = f"maven/modrinth/{artifact.ID}/{artifact.version}/{filename}"
     return urljoin("https://api.modrinth.com/maven/", artifact_path),filename
