@@ -1,8 +1,33 @@
 
 import argparse
+import json
 import os
 from pathlib import Path
 import logging
+import duckdb
+
+def get_mc_version()-> str:
+    '''
+    Reads the installed Minecraft Version for the current instance
+
+    Returns:
+        minecraft_version:str
+    '''
+    if LAUNCHER == "prism":
+        with open("../mmc-pack.json") as f:
+            mmc_pack = json.load(f)
+            for component in mmc_pack.get("components"):
+                if component.get("uid") == "net.minecraft":
+                    return component.get("version")
+    else:
+        try:
+            data = duckdb.connect(DATA_DIR/ "app.db",read_only=True)
+            current_dir_name = Path(os.getcwd()).name
+            data = data.sql(f"SELECT game_version FROM profiles WHERE path = '{current_dir_name}'").fetchall()
+            return data[0][0]
+        except Exception as e:
+            raise Exception(e)
+
 os.makedirs("nrc_asset_overrides",exist_ok=True)
 
 logger = logging.getLogger("Config")
@@ -33,3 +58,6 @@ elif LAUNCHER == "prism":
     DATA_DIR = PRISM_DATA_DIR
 else:
     raise Exception("Invalid Launcher type")
+
+
+MINECRAFT_VERSION = get_mc_version()
