@@ -62,8 +62,8 @@ class ModClass():
         for u in self.url:
             if await api.download_jar(u,self.filename):
                 if self.local_mod:
-                    old_file:os.DirEntry = local_files.get(self.local_mod.sha)
-                    if old_file and old_file.is_file():
+                    old_file:os.DirEntry = (local_files.get(self.local_mod.sha)).get("filename")
+                    if old_file:
                         os.remove(old_file)
             
                 self.sha = await calc_hash(f"mods/{self.filename}")
