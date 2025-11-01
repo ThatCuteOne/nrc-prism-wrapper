@@ -97,7 +97,7 @@ class ModClass():
     async def process(self):
         if self.local_mod:
             if self.local_mod.version_identifier == self.version_identifier:
-                logger.info(f"No version mismatch detected skipping {self.ID}")
+                #logger.info(f"No version mismatch detected skipping {self.ID}")
                 self.sha = self.local_mod.sha
                 self.download_success = True
                 return

@@ -194,7 +194,7 @@ async def join_server_session(
             logger.debug(f"API request failed: {e}")
             raise Exception(f"Minecraft API request failed: {e}")
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-async def get_norisk_versions():
+async def get_norisk_modpacks():
     url = f"{NORISK_API_URL}/launcher/modpacks"
     async with httpx.AsyncClient() as client:
         logger.info("Getting version profiles from norisk api")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from dataclasses import dataclass
 import subprocess
 import config
 from networking import api
@@ -25,48 +26,80 @@ logger = logging.getLogger("NRC Wrapper")
 
 os.makedirs("./mods",exist_ok=True)
 
-ASSET_PATH = "NoRiskClient/assets"
-def remove_duplicates_by_keys(dict_list, keys):
-    seen = set()
-    unique_dicts = []
-    
-    for d in dict_list:
-        # Create a tuple of values for the specified keys
-        key_tuple = tuple(d[key] for key in keys)
-        if key_tuple not in seen:
-            seen.add(key_tuple)
-            unique_dicts.append(d)
-    
-    return unique_dicts
+class ModLoader():
+    def __init__(self,loader_type,version):
+        self.type = loader_type
+        self.version = version
 
-async def pack_compatible(pack):
-    compatible_versions = set()
-    for m in pack.get("mods"):
-        for v in m.get("compatibility"):
-            compatible_versions.add(v)
-    
-    if config.MINECRAFT_VERSION in compatible_versions:
-        if pack.get("loaderPolicy"): # TODO handle if a pack inherits loaders from other pack(the whole nested pack managment probably needs a rewrite/drastic improvement)
-            if pack.get("loaderPolicy").get("default").get(config.LOADER):
-                # TODO loader version validation
-                pass
+class DataManager():
+    def __init__(self, data):
+        self.data = data
+        self.mods = []
+        self.assetpacks = []
+        self.repos = self.data.get("repositories")
+        self.compatible_versions = []
+        self.loader:ModLoader = None
+        self.pack = self.data.get("packs").get(config.NORISK_PACK)
+        
+
+        packs = []
+        def process(pack):
+            if not self.loader and pack.get("loaderPolicy").get("default").get("fabric").get("version"):
+                self.loader = ModLoader("fabric",pack.get("loaderPolicy").get("default").get("fabric").get("version"))
+            if pack.get("assets"):
+                self.assetpacks.extend(pack.get("assets"))
+            if pack.get("mods"):
+                self.mods.extend(pack.get("mods"))
+            if pack.get("inheritsFrom"):
+                for p in pack.get("inheritsFrom"):
+                    if p not in packs:
+                        packs.append(p)
+                        process(self.data.get("packs").get(p))
+        
+        process(self.pack)
+        self.assetpacks = list(set(self.assetpacks))
+        filtered_mods = []
+        filtered_ids = []
+        for m in self.mods:
+            if m.get("id") in filtered_ids:
+                continue
             else:
-                logger.error(f"Pack \"{pack.get("displayName")}\" isnt compatible with \"{config.LOADER}\"\nPlease Install \"{pack.get("loaderPolicy").get("default")}\"")
+                self.compatible_versions.extend(m.get("compatibility"))
+                filtered_ids.append(m.get("id"))
+                filtered_mods.append(m)
+        self.mods = filtered_mods
+        self.compatible_versions = list(set(self.compatible_versions))
+        
+
+
+ASSET_PATH = "NoRiskClient/assets"
+
+async def validate(data:DataManager):
+
+    
+    if config.MINECRAFT_VERSION in data.compatible_versions:
+        if data.loader:
+            if data.loader.type == config.LOADER:
+                if not data.loader.version == config.LOADER_VERSION:
+                    logger.warning(f"You are using a version of the modloader that isnt recommended. The recommended loader version is \"{data.loader.version}\" but the wrong version is present \"{config.LOADER_VERSION}\"!!")
+            else:
+                logger.error(f"Pack \"{data.pack.get("displayName")}\" isnt compatible with \"{config.LOADER}\"\nPlease Install \"{data.loader.type}\" version:\"{data.loader.version}\"")
                 sys.exit(1)
     else:
-        logger.error(f"Pack \"{pack.get("displayName")}\" isnt compatible with \"{config.MINECRAFT_VERSION}\"\nAvalible versions for this pack: {compatible_versions}")
+        logger.error(f"Pack \"{data.pack.get("displayName")}\" isnt compatible with \"{config.MINECRAFT_VERSION}\"\nAvalible versions for this pack: {data.compatible_versions}")
         sys.exit(1)
 
 
 async def download_data():
-    versions = await api.get_norisk_versions()
-    pack = versions.get("packs").get(config.NORISK_PACK)
-    await pack_compatible(pack)
-    repos = versions.get("repositories")
-    mods, assets = await get_data(pack,versions)
+    modpacks = await api.get_norisk_modpacks()
+    if config.NORISK_PACK not in modpacks.get("packs"):
+        logger.error(f"{config.NORISK_PACK} isnt a valid modpack id. Valid ids are: {list(modpacks.get("packs").keys())}")
+        sys.exit(1)
+    data = DataManager(modpacks)
+    await validate(data)
     tasks =[
-        get_assets.run(assets),
-        jars.main(remove_duplicates_by_keys(mods,["id"]),repos),
+        get_assets.run(data.assetpacks),
+        jars.main(data.mods,data.repos),
         get_token.main()
 
     ]
@@ -74,33 +107,6 @@ async def download_data():
     for result in results:
         if result is not None:
             return result
-
-
-
-async def get_data(pack,versions):
-    '''
-    returns a list of all remote mods and asset-packs that need to be installed
-    '''  
-    def filter_none(items):
-        return [item for item in items if item is not None] if items else []
-
-    mods:list = pack.get("mods",[])
-    assets:list = pack.get("assets",[])
-    inheritsFrom = pack.get("inheritsFrom")
-    if inheritsFrom is None:
-        inheritsFrom = []
-    for parent_pack_name in inheritsFrom:
-        parent_pack = versions.get("packs",[]).get(parent_pack_name)
-        if not parent_pack:
-            continue
-        assets.extend(parent_pack.get("assets",[]))
-        mods.extend(parent_pack.get("mods",[]))
-        inherited_mods,inherited_assets = await get_data(parent_pack, versions)
-        mods.extend(inherited_mods)
-        assets.extend(inherited_assets)
-
-    return filter_none(mods),filter_none(assets)
-
 
 
 
