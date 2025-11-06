@@ -61,6 +61,8 @@ parser.add_argument("-l","--launcher", type=str,help="Overrides the automatic la
 parser.add_argument("--modrinth-data-path",type=str,default="../../",help="path to the dir that contains app.db")
 parser.add_argument("--prism-data-path",type=str,default="../../..",help="path to the dir that contains accounts.json")
 parser.add_argument("-p","--norisk-pack",type=str,default="norisk-prod",help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
+parser.add_argument("-m","--mc-version", type=str,help="Overrides the automatic minecraft version detection")
+
 
 args, unknown_args = parser.parse_known_args()
 
@@ -68,6 +70,7 @@ LAUNCHER = args.launcher
 MODRINTH_DATA_DIR = args.modrinth_data_path
 PRISM_DATA_DIR = args.prism_data_path
 NORISK_PACK = args.norisk_pack
+MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()
 
 if LAUNCHER is None:
     if Path(MODRINTH_DATA_DIR + "/app.db").is_file():
@@ -83,5 +86,5 @@ elif LAUNCHER == "prism":
 else:
     raise Exception("Invalid Launcher type")
 
-
-MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()
+if args.mc_version is None:
+    MINECRAFT_VERSION = args.mc_version
