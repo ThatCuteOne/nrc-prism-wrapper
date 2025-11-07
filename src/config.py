@@ -16,29 +16,31 @@ def get_instance_data()-> tuple[str,str,str]:
     minecraft_version : str
     loader: str
     loader_version:str
-
-    if LAUNCHER == "prism":
-        with open("../mmc-pack.json") as f:
-            mmc_pack = json.load(f)
-            for component in mmc_pack.get("components"):
-                if component.get("uid") == "net.minecraft":
-                    minecraft_version = component.get("version")
-                if component.get("uid") == "net.fabricmc.fabric-loader":
-                    loader = "fabric"
-                    loader_version = component.get("version")
-                elif component.get("uid") == "net.neoforged":
-                    loader = "neoforge" 
-                    loader_version = component.get("version")
-                elif component.get("uid") == "net.minecraftforge":
-                    loader = "forge" 
-                    loader_version = component.get("version")
-                elif component.get("uid") == "net.minecraftforge":
-                    loader = "forge" 
-                    loader_version = component.get("version")
-                elif component.get("uid") == "org.quiltmc.quilt-loader":
-                    loader = "quilt" 
-                    loader_version = component.get("version")
-        return minecraft_version,loader,loader_version
+    try:
+        if LAUNCHER == "prism":
+            with open("../mmc-pack.json") as f:
+                mmc_pack = json.load(f)
+                for component in mmc_pack.get("components"):
+                    if component.get("uid") == "net.minecraft":
+                        minecraft_version = component.get("version")
+                    if component.get("uid") == "net.fabricmc.fabric-loader":
+                        loader = "fabric"
+                        loader_version = component.get("version")
+                    elif component.get("uid") == "net.neoforged":
+                        loader = "neoforge" 
+                        loader_version = component.get("version")
+                    elif component.get("uid") == "net.minecraftforge":
+                        loader = "forge" 
+                        loader_version = component.get("version")
+                    elif component.get("uid") == "net.minecraftforge":
+                        loader = "forge" 
+                        loader_version = component.get("version")
+                    elif component.get("uid") == "org.quiltmc.quilt-loader":
+                        loader = "quilt" 
+                        loader_version = component.get("version")
+            return minecraft_version,loader,loader_version
+    except FileNotFoundError:
+        return "1.21.10" , "fabric", "0.17.3"
     else:
         try:
             data = duckdb.connect(DATA_DIR/ "app.db",read_only=True)
@@ -52,24 +54,39 @@ def get_instance_data()-> tuple[str,str,str]:
         except Exception as e:
             raise Exception(e)
 
-os.makedirs("nrc_asset_overrides",exist_ok=True)
 
 logger = logging.getLogger("Config")
 
 parser = argparse.ArgumentParser(description='NRC Wrapper for third party launchers')
 parser.add_argument("-l","--launcher", type=str,help="Overrides the automatic launcher detection\nOptions: prism | modrinth")
-parser.add_argument("--modrinth-data-path",type=str,default="../../",help="path to the dir that contains app.db")
-parser.add_argument("--prism-data-path",type=str,default="../../..",help="path to the dir that contains accounts.json")
-parser.add_argument("-p","--norisk-pack",type=str,default="norisk-prod",help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
+parser.add_argument("--modrinth-data-path",type=str,help="path to the dir that contains app.db")
+parser.add_argument("--prism-data-path",type=str,help="path to the dir that contains accounts.json")
+parser.add_argument("-p","--norisk-pack",type=str,help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
 parser.add_argument("-m","--mc-version", type=str,help="Overrides the automatic minecraft version detection")
-
 
 args, unknown_args = parser.parse_known_args()
 
-LAUNCHER = args.launcher
-MODRINTH_DATA_DIR = args.modrinth_data_path
-PRISM_DATA_DIR = args.prism_data_path
-NORISK_PACK = args.norisk_pack
+LAUNCHER = (
+    args.launcher or                    
+    os.environ.get("LAUNCHER_TYPE") or  
+    None
+)
+MODRINTH_DATA_DIR = (
+    args.modrinth_data_path or          
+    os.environ.get("MODRINTH_DATA_PATH") or
+    "../../"
+)
+PRISM_DATA_DIR = (
+    args.prism_data_path or          
+    os.environ.get("PRISM_DATA_PATH") or
+    "../../.."
+)
+NORISK_PACK = (
+    args.norisk_pack or          
+    os.environ.get("NORISK_PACK") or
+    "norisk-prod"
+)
+
 MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()
 
 if LAUNCHER is None:

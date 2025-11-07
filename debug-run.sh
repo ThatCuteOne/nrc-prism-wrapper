@@ -1,1 +1,1 @@
-python ./src/__main__.py --prism-data-path "./" -l "prism" -p "norisk-prod" -m "1.21.1"
+NORISK_PACK="norisk-prod" python ./src/__main__.py --prism-data-path "./" -l "prism" -m "1.21.4"
