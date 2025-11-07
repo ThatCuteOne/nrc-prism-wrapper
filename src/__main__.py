@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from dataclasses import dataclass
 import subprocess
 import config
 from networking import api
@@ -75,8 +74,6 @@ class DataManager():
 ASSET_PATH = "NoRiskClient/assets"
 
 async def validate(data:DataManager):
-
-    
     if config.MINECRAFT_VERSION in data.compatible_versions:
         if data.loader:
             if data.loader.type == config.LOADER:
