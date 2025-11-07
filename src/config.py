@@ -87,7 +87,6 @@ NORISK_PACK = (
     "norisk-prod"
 )
 
-MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()
 
 if LAUNCHER is None:
     if Path(MODRINTH_DATA_DIR + "/app.db").is_file():
@@ -102,6 +101,8 @@ elif LAUNCHER == "prism":
     DATA_DIR = PRISM_DATA_DIR
 else:
     raise Exception("Invalid Launcher type")
+
+MINECRAFT_VERSION, LOADER, LOADER_VERSION = get_instance_data()
 
 if args.mc_version is not None:
     MINECRAFT_VERSION = args.mc_version
