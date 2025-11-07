@@ -11,7 +11,7 @@ def get_instance_data()-> tuple[str,str,str]:
     Reads the installed Minecraft Version for the current instance
 
     Returns:
-        tuple[<minecraft_version>,<mod_loader>,<mod_loader_version>]
+        tuple[minecraft_version,mod_loader,mod_loader_version]
     '''
     minecraft_version : str
     loader: str
@@ -86,5 +86,5 @@ elif LAUNCHER == "prism":
 else:
     raise Exception("Invalid Launcher type")
 
-if args.mc_version is None:
+if args.mc_version is not None:
     MINECRAFT_VERSION = args.mc_version
