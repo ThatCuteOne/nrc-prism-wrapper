@@ -76,7 +76,7 @@ LAUNCHER = (
 NRC_MOD_PATH = (
     args.nrc_mod_path or                    
     os.environ.get("NRC_MOD_PATH") or  
-    "./mods/NoriskClientMods"
+    "./mods/NoriskClient"
 )
 
 os.makedirs(NRC_MOD_PATH,exist_ok=True)
