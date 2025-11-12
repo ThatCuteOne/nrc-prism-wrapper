@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import tasks.get_dependencies as get_dependencies
+get_dependencies.check_dependencies()
 import subprocess
 import config
 from networking import api
 from tasks import jars
-import tasks.get_dependencies as get_dependencies
 import logging
 import asyncio
 import os
@@ -14,7 +15,6 @@ import tasks.get_assets as get_assets
 
 
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
-get_dependencies.check_dependencies()
 
 logger = logging.getLogger("NRC Wrapper")
 
