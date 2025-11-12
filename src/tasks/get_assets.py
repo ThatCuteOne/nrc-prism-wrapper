@@ -5,6 +5,7 @@ import logging
 import os
 import zipfile
 from pathlib import Path
+import config
 import networking.api as api
 
 logger = logging.getLogger("Assets")
@@ -58,7 +59,7 @@ async def injectIntoJar():
             jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
             files_to_add.append((file_path, jar_path_entry))
 
-    mods_dir = Path("./mods")
+    mods_dir = Path(config.NRC_MOD_PATH)
     target_hash = core_mod.get("hash")
     
     for file in mods_dir.glob("*.jar"):

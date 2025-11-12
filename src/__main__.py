@@ -23,7 +23,7 @@ logger = logging.getLogger("NRC Wrapper")
 # Wrapper script for the NoRisk Client.
 # This script adds the -D property, downloads assets, mods and then runs the game start command.
 
-os.makedirs("./mods",exist_ok=True)
+os.makedirs(config.NRC_MOD_PATH,exist_ok=True)
 
 class ModLoader():
     def __init__(self,loader_type,version):

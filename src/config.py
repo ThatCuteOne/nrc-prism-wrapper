@@ -63,6 +63,7 @@ parser.add_argument("--modrinth-data-path",type=str,help="path to the dir that c
 parser.add_argument("--prism-data-path",type=str,help="path to the dir that contains accounts.json")
 parser.add_argument("-p","--norisk-pack",type=str,help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
 parser.add_argument("-m","--mc-version", type=str,help="Overrides the automatic minecraft version detection")
+parser.add_argument("-n","--nrc-mod-path", type=str,help="The path where the norisk client mods will be installed")
 
 args, unknown_args = parser.parse_known_args()
 
@@ -71,6 +72,15 @@ LAUNCHER = (
     os.environ.get("LAUNCHER_TYPE") or  
     None
 )
+
+NRC_MOD_PATH = (
+    args.nrc_mod_path or                    
+    os.environ.get("NRC_MOD_PATH") or  
+    "./mods/NoriskClientMods"
+)
+
+os.makedirs(NRC_MOD_PATH,exist_ok=True)
+
 MODRINTH_DATA_DIR = (
     args.modrinth_data_path or          
     os.environ.get("MODRINTH_DATA_PATH") or

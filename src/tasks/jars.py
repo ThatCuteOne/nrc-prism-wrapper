@@ -24,7 +24,7 @@ async def calc_hash(file:Path):
         return hashlib.md5(f.read()).hexdigest()
 repos : dict
 local_files = {}
-for f in os.scandir("./mods"):
+for f in os.scandir(config.NRC_MOD_PATH):
     if f.name.endswith(".jar") or f.name.endswith(".jar.disabled"):
             with open(f,'rb') as file:
                 local_files[hashlib.md5(file.read()).hexdigest()] = {
@@ -65,7 +65,7 @@ class ModClass():
                     if old_file:
                         os.remove(old_file)
             
-                self.sha = await calc_hash(f"mods/{self.filename}")
+                self.sha = await calc_hash(f"{config.NRC_MOD_PATH}/{self.filename}")
                 self.download_success = True
                 break
             else:
