@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from dataclasses import dataclass
+import tasks.get_dependencies as get_dependencies
+get_dependencies.check_dependencies()
 import subprocess
 import config
 from networking import api
 from tasks import jars
-import tasks.get_dependencies as get_dependencies
 import logging
 import asyncio
 import os
@@ -15,7 +15,6 @@ import tasks.get_assets as get_assets
 
 
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
-get_dependencies.check_dependencies()
 
 logger = logging.getLogger("NRC Wrapper")
 
@@ -24,7 +23,7 @@ logger = logging.getLogger("NRC Wrapper")
 # Wrapper script for the NoRisk Client.
 # This script adds the -D property, downloads assets, mods and then runs the game start command.
 
-os.makedirs("./mods",exist_ok=True)
+os.makedirs(config.NRC_MOD_PATH,exist_ok=True)
 
 class ModLoader():
     def __init__(self,loader_type,version):
@@ -75,8 +74,6 @@ class DataManager():
 ASSET_PATH = "NoRiskClient/assets"
 
 async def validate(data:DataManager):
-
-    
     if config.MINECRAFT_VERSION in data.compatible_versions:
         if data.loader:
             if data.loader.type == config.LOADER:

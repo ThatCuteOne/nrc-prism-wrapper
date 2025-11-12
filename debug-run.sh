@@ -1,1 +1,1 @@
-python ./src/__main__.py --prism-data-path "./" -l "prism" -p "hypixel-skyblock"
+NORISK_PACK="norisk-prod" python ./src/__main__.py --prism-data-path "./" -l "prism" -m "1.21.4"

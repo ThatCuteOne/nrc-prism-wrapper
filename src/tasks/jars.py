@@ -24,7 +24,7 @@ async def calc_hash(file:Path):
         return hashlib.md5(f.read()).hexdigest()
 repos : dict
 local_files = {}
-for f in os.scandir("./mods"):
+for f in os.scandir(config.NRC_MOD_PATH):
     if f.name.endswith(".jar") or f.name.endswith(".jar.disabled"):
             with open(f,'rb') as file:
                 local_files[hashlib.md5(file.read()).hexdigest()] = {
@@ -51,7 +51,6 @@ class ModClass():
     version_identifier: str
     sha = None
     newest_installed = False,
-    in_index = False
     local_mod = None
     url = None
     filename = None
@@ -66,7 +65,7 @@ class ModClass():
                     if old_file:
                         os.remove(old_file)
             
-                self.sha = await calc_hash(f"mods/{self.filename}")
+                self.sha = await calc_hash(f"{config.NRC_MOD_PATH}/{self.filename}")
                 self.download_success = True
                 break
             else:
@@ -75,7 +74,6 @@ class ModClass():
 
 
     async def build_url(self):
-
         if isinstance(self.source , ModrinthSource):
             filename = f"{self.source.projectId}-{self.version_identifier}.jar"
             artifact_path = f"maven/modrinth/{self.source.projectId}/{self.version_identifier}/{filename}"
@@ -174,26 +172,28 @@ async def index_to_modclass(index_entry):
         index_entry.get("version")
     )
     mod.sha = index_entry.get("hash")
-    mod.in_index = True
     return mod
 
 
 
-async def main(mods,repositories):
+async def main(mods, repositories):
     global repos
     repos = repositories
     tasks = []
     # get remote modclasses
     index = await read_index()
     mod_classes = []
+    index_mods_seen = set()
+
     for m in mods:
-        mod:ModClass = await new_modclass(m)
+        mod: ModClass = await new_modclass(m)
         if mod is None:
             continue
         for index_entry in index:
             if local_files.get(index_entry.get("hash")):
                 if mod.ID == index_entry.get("id"):
                     mod.local_mod = await index_to_modclass(index_entry)
+                    index_mods_seen.add(mod.ID)
                     break
 
         mod_classes.append(mod)
@@ -204,7 +204,20 @@ async def main(mods,repositories):
     new_index = []
     for m in mod_classes:
         if m.download_success:
-            new_index.append( await m.serialize())
+            new_index.append(await m.serialize())
+    
+    for index_entry in index:
+        if index_entry.get("id") not in index_mods_seen:
+            mod_hash = index_entry.get("hash")
+            if mod_hash in local_files:
+                local_file_info = local_files[mod_hash]
+                filename = local_file_info.get("filename")
+                try:
+                    os.remove(filename)
+                    logger.info(f"Removed orphaned mod: {filename.name}")
+                except OSError as e:
+                    logger.error(f"Failed to remove {filename}: {e}")
+    
     await write_to_index_file(new_index)
     
 

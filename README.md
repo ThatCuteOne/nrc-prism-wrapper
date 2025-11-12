@@ -29,16 +29,23 @@ _NOTE: Currently only the fabric versions are supported(1.21+)_
 
 You may also want to checkout technicfans wrapper thats written in go(lang) [here](https://github.com/technicfan/nrc-wrapper-go)
 
+# Settings
+| Flag                    | Variable           | description                                                                 | Default value           |
+| ----------------------- | ------------------ | --------------------------------------------------------------------------- | ----------------------- |
+| `-l` & `--launcher`     | LAUNCHER_TYPE      | Overrides the automatic launcher detection Options: prism \| modrinth       | None                    |
+| `--modrinth-data-path`  | MODRINTH_DATA_PATH | Path to the dir that contains app.db                                        | ../../                  |
+| `--prism-data-path`     | PRISM_DATA_PATH    | path to the dir that contains accounts.json                                 | ../../..                |
+| `-p` & `--norisk-pack`  | NORISK_PACK        | Norisk pack to use                                                          | norisk-prod             |
+| `-m` & `--mc-version`   | None               | Overrides the automatic minecraft version detection(intended for debugging) | auto                    |
+| `-n` & `--nrc-mod-path` | NRC_MOD_PATH       | The path where the norisk client mods will be installed                     | ./mods/NoriskClientMods |
+
 
 ### Todos
+- look into python venv 
 - run arg for disabling jar injection
 - set dev enviroment via env variable
 - log steaming into modrinth app(if possible)
-- ~~set modloader version~~(not _really_ needed)
 - verfiy downloads by hash matching with maven repo(http://maven.norisk.gg/repository/norisk-production/gg/norisk/nrc-ui/1.0.78+fabric.1.21.7/nrc-ui-1.0.78+fabric.1.21.7.jar.md5/sha1/sha257/sha512) and modrinth
-- ~~force newest setting(force install newest versions from maven repo or modrinth)~~ just use "norisk-bughunter"
-
-
 
 
 #### Ideas

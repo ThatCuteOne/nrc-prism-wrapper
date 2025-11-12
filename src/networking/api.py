@@ -10,6 +10,7 @@ import aiofiles
 import aiohttp
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
+import config
 
 
 logger = logging.getLogger("Minecraft/Norisk API")
@@ -28,7 +29,7 @@ async def download_jar(download_url,filename):
             async with aiohttp.ClientSession() as client:
                 async with client.get(download_url) as response:
                     response.raise_for_status()
-                    async with aiofiles.open(f"./mods/{filename}", 'wb') as f:
+                    async with aiofiles.open(f"{config.NRC_MOD_PATH}/{filename}", 'wb') as f:
                         async for chunk in response.content.iter_chunked(8192):
                             await f.write(chunk)
                         logger.info(f"Downloaded {filename} ✅")
