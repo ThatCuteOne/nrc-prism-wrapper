@@ -43,7 +43,7 @@ def get_instance_data()-> tuple[str,str,str]:
         return "1.21.10" , "fabric", "0.17.3"
     else:
         try:
-            data = duckdb.connect(DATA_DIR/ "app.db",read_only=True)
+            data = duckdb.connect(f"{DATA_DIR}/app.db",read_only=True)
             current_dir_name = Path(os.getcwd()).name
             result = data.sql(f"SELECT mod_loader, mod_loader_version, game_version FROM profiles WHERE path = '{current_dir_name}'").fetchall()
             if result:

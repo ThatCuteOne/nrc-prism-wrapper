@@ -14,7 +14,11 @@ from shutil import which
 import tasks.get_token as get_token
 import tasks.get_assets as get_assets
 
-
+# if you want to debug the modrinth app
+# handlers={
+#     logging.FileHandler('./modrinth-wrapper.log',encoding="utf-8"),
+#     logging.StreamHandler()
+# }                                                                                                                  put it here
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
 
 logger = logging.getLogger("NRC Wrapper")
