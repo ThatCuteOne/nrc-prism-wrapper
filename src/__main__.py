@@ -151,7 +151,6 @@ def main():
             sys.exit(process.returncode)
         else:
             logger.info("Starting Minecraft..")
-            logger.info(new_cmd)
             os.execvp(new_cmd[0], new_cmd)
     except FileNotFoundError:
         print(f"ERROR: Command not found: {new_cmd[0]}", file=sys.stderr)
