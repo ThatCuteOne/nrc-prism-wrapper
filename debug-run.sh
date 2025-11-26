@@ -1,1 +1,1 @@
-NORISK_PACK="norisk-prod" python ./src/__main__.py --prism-data-path "./" -l "prism" -m "1.21.4"
+NORISK_PACK="norisk-bughunter" python ./src/__main__.py --prism-data-path "./" -l "prism" -m "1.21.10"

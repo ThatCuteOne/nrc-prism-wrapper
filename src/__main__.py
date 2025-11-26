@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from pathlib import Path
 import tasks.get_dependencies as get_dependencies
 get_dependencies.check_dependencies()
 import subprocess
@@ -114,7 +113,7 @@ async def download_data():
 
 def main():
     token = asyncio.run(download_data())
-    asyncio.run(get_assets.injectIntoJar())
+    asyncio.run(get_assets.applyjarpatches())
 
     # Get the original command arguments
     original_args = config.unknown_args

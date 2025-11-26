@@ -24,5 +24,4 @@ zipapp.create_archive(
     "build/temp",
     "build/nrc-wrapper.pyz",
     interpreter='/usr/bin/env python3'
-
 )

@@ -42,58 +42,91 @@ async def calc_hash(file:Path):
     with open(file,'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
 
-async def injectIntoJar():
+async def applyjarpatches():
     '''
     Injects NRC assets into nrc-core jarfile
     '''
-    logger.info("Injecting Assets into jarfile")
     with open(".nrc-index.json") as f:
         index = json.load(f)
 
-    core_mod = next((mod for mod in index if mod.get("id") == "nrc-core"), None)
-    source_path = Path("NoRiskClient/assets/nrc-cosmetics/assets")
-    files_to_add = []
-    for file_path in source_path.rglob('*'):
-        if file_path.is_file():
-            rel_path = file_path.relative_to(source_path)
-            jar_path_entry = str(Path("assets") / rel_path).replace('\\', '/')
-            files_to_add.append((file_path, jar_path_entry))
+    async def patch_jar(mod:dict,file):
+        temp_jar_path = file.with_suffix('.temp.jar')
+        try:
+            with zipfile.ZipFile(file, 'r') as original_jar:
+                with zipfile.ZipFile(temp_jar_path, 'w') as updated_jar:
+                    original_files = original_jar.namelist()
+                    # asset injection
+                    if mod.get("id") == "nrc-client":
+                        source_path = Path("NoRiskClient/assets/nrc-cosmetics/assets")
+                        for file_path in source_path.rglob('*'):
+                            if file_path.is_file():
+                                in_jar_path = f"assets/{file_path.relative_to(source_path)}"
+                                updated_jar.write(file_path,in_jar_path)
+                                try:
+                                    original_files.remove(in_jar_path)
+                                except ValueError:
+                                    pass
+                    for f in original_files:
+                        if f == "fabric.mod.json" and mod.get("id") != "nrc-client": # patch fabric.mod.json
+                            with original_jar.open(f) as jsonfile:
+                                json_data = json.load(jsonfile)
+                                if json_data.get("custom",None) is None:
+                                    json_data["custom"] = {
+                                        "modmenu":{
+                                            "parent":{
+                                                "id" : "nrc-client"
+                                            }
+                                        }
+                                    }
+                                elif json_data["custom"].get("modmenu",None) is None:
+                                    json_data["custom"]["modmenu"] = {
+                                        "parent" : {
+                                            "id": "nrc-client"
+                                        }
+                                    }
+                                else:
+                                    if json_data["custom"]["modmenu"].get("parent",None) is None:
+                                        json_data["custom"]["modmenu"]["parent"] = {
+                                            "id": "nrc-client"
+                                        }
+
+                                updated_jar.writestr("fabric.mod.json", json.dumps(json_data, indent=2))
+
+                            continue
+                        else:
+                            # copy original data 
+                            data = original_jar.read(f)
+                            updated_jar.writestr(f, data)
+                        
+                    original_jar.close()
+                    updated_jar.close()
+                    os.replace(temp_jar_path,file)
+                    mod["hash"] = await calc_hash(file)
+                    return mod
+            
+        except Exception as e:
+            if temp_jar_path.exists():
+                temp_jar_path.unlink()
+            logger.error(f"Error updating JAR: {e}")
+            raise
+    logger.info("Applying jar patches..")
 
     mods_dir = Path(config.NRC_MOD_PATH)
-    target_hash = core_mod.get("hash")
+    files = list(mods_dir.glob("*.jar"))
     
-    for file in mods_dir.glob("*.jar"):
-        if await calc_hash(file) == target_hash:
-            temp_jar_path = file.with_suffix('.temp.jar')
-            
-            try:
-                with zipfile.ZipFile(file, 'r') as original_jar:
-                    with zipfile.ZipFile(temp_jar_path, 'w', compression=zipfile.ZIP_DEFLATED) as updated_jar:
-                        logger.info("Updating JAR file")
-                        
-                        assets_to_replace = {jar_path for _, jar_path in files_to_add}
-                        for item in original_jar.infolist():
-                            if item.filename not in assets_to_replace:
-                                updated_jar.writestr(item, original_jar.read(item.filename))
-                        
-                        for file_path, jar_path in files_to_add:
-                            with open(file_path, 'rb') as f:
-                                updated_jar.writestr(jar_path, f.read())
-                
-                file.unlink()
-                temp_jar_path.rename(file)
-                
-                core_mod["hash"] = await calc_hash(file)
-                with open(".nrc-index.json", 'w') as f:
-                    json.dump(index, f, indent=2)
-                logger.info("Successfully updated JAR file!")
+    nrc_jars = []
+    for mod in index:
+        target_hash = mod.get("hash")
+        for file in files:
+            if await calc_hash(file) == target_hash:
+                nrc_jars.append(patch_jar(mod,file))
+                files.remove(file)
                 break
-                
-            except Exception as e:
-                if temp_jar_path.exists():
-                    temp_jar_path.unlink()
-                logger.error(f"Error updating JAR: {e}")
-                raise
+
+    new_index = await asyncio.gather(*nrc_jars)
+    with open(".nrc-index.json","w") as f:
+        json.dump(new_index,f)
+
 
 async def run(asset_packs):
     assets = list(set(asset_packs))
@@ -103,6 +136,7 @@ async def run(asset_packs):
         tasks.append(main(a))
 
     await asyncio.gather(*tasks)
+
 
 
 async def main(assetpack):
