@@ -9,3 +9,4 @@ norisk_data.json
 app.*
 config.jsonc
 nrc_asset_overrides*
+.nrc-wrapper-venv

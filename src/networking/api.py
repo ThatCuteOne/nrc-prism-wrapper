@@ -201,7 +201,8 @@ async def get_norisk_modpacks():
         logger.info("Getting version profiles from norisk api")
         try:
             response = await client.get(
-                url
+                url,
+                timeout=30
             )
             
             if not response.is_success:
@@ -211,7 +212,7 @@ async def get_norisk_modpacks():
             
             return response.json()
         except httpx.RequestError as e:
-            logger.error(f"Norisk API request failed: {e}")
-            raise Exception(f"Norisk API request failed: {e}")
+            logger.error(f"Norisk API request failed: {repr(e)}")
+            raise Exception(f"Norisk API request failed: {repr(e)}")
         except httpx.TimeoutException as e:
-            logger.error(f"Norisk API request timed out: {e}")
+            logger.error(f"Norisk API request timed out: {repr(e)}")
