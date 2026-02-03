@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from pathlib import Path
 import tasks.get_dependencies as get_dependencies
 get_dependencies.check_dependencies()
 import subprocess
@@ -13,7 +14,11 @@ from shutil import which
 import tasks.get_token as get_token
 import tasks.get_assets as get_assets
 
-
+# if you want to debug the modrinth app
+# handlers={
+#     logging.FileHandler('./modrinth-wrapper.log',encoding="utf-8"),
+#     logging.StreamHandler()
+# }                                                                                                                  put it here
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s] [%(name)s/%(levelname)s] %(message)s',datefmt='%H:%M:%S')
 
 logger = logging.getLogger("NRC Wrapper")
@@ -119,21 +124,11 @@ def main():
     else:
         new_cmd = []
 
-    token_added = False
+    new_cmd.append(original_args[0])
+    new_cmd.append(f"-Dnorisk.token={token}")
+    new_cmd.append(f"-Dfabric.addMods={config.NRC_MOD_PATH}")
+    new_cmd.extend(original_args[1:])
 
-    for arg in original_args:
-        new_cmd.append(arg)
-        # When we find the Java executable or main class, inject our token arg
-        if (arg.endswith('java') or
-            arg == 'net.minecraft.client.main.Main' or
-            arg.endswith('/java') or
-            arg.endswith('\\java.exe') or
-            arg.endswith('javaw.exe')) and not token_added:
-            new_cmd.append(f"-Dnorisk.token={token}")
-            token_added = True
-
-    if not token_added:
-        new_cmd.append(f"-Dnorisk.token={token}")
     try:
         # windows log output workaround(i hate you billie)
         # TODO for some reason the log reading is very slow and wierd but at least it works
