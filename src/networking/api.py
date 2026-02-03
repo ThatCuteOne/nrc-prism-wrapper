@@ -43,37 +43,47 @@ async def download_jar(download_url,filename):
             logger.error(f"Unexpected error: {e}")
 
 
-async def download_single_asset(asset_id: str, path: str, asset_info: Dict, semaphore: asyncio.Semaphore) -> None:
-        """Download a single asset file"""
-        logger = logging.getLogger("Asset Downloader")
-        async with semaphore:
+async def download_file(download_url:str, destination:str, semaphore:asyncio.Semaphore, target_hash:str = None) -> None:
+    """
+    Downloads a File from given url
+    
+    :param download_url: Description
+    :type download_url: str
+    :param destination: Description
+    :type destination: str
+    :param semaphore: Description
+    :type semaphore: asyncio.Semaphore
+    """
+    async with semaphore:
             try:
-                path_obj = Path(path)
+                path_obj = Path(destination)
                 dir_path = path_obj.parent
-                os.makedirs(f"{ASSET_PATH}/{dir_path}", exist_ok=True)
-                
+                os.makedirs(dir_path, exist_ok=True)
+
                 # Download from CDN
-                url = f"https://cdn.norisk.gg/assets/{asset_id}/assets/{path}"
-                logger.info(f"Downloading: {path_obj.name}")
+                logger.info(f"Downloading: {download_url}")
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
+                    async with session.get(download_url) as response:
                         if response.status == 200:
                             content = await response.read()
                             
                             # Verify hash
-                            downloaded_hash = hashlib.md5(content).hexdigest()
-                            if downloaded_hash != asset_info.get("hash"):
-                                raise ValueError(f"Hash mismatch for {path}")
+                            if target_hash is not None:
+                                downloaded_hash = hashlib.md5(content).hexdigest()
+                                if downloaded_hash != target_hash:
+                                    if not config.NO_HASH_VERIFICATION:
+                                        raise ValueError(f"Hash mismatch for {destination}")
+                                    logger.warning(f"Hash mismatch for {destination}")
                                 
                             # Save file
-                            async with aiofiles.open(f"{ASSET_PATH}/{path}", "wb") as f:
+                            async with aiofiles.open(destination, "wb") as f:
                                 await f.write(content)
                                 
                         else:
-                            raise Exception(f"Failed to download {path}: {response.status}")
+                            raise Exception(f"Failed to download {download_url}: {response.status}")
                             
             except Exception as e:
-                print(f"Error downloading {path}: {e} URL:{url}")
+                logger.error(f"Error downloading {destination}: {e} URL:{download_url}")
                 raise
 
 
