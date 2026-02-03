@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-from pathlib import Path
-import tasks.get_dependencies as get_dependencies
-get_dependencies.check_dependencies()
+import tasks.get_dependencies  # noqa: F401
 import subprocess
 import config
 from networking import api

@@ -7,7 +7,7 @@ import os
 root_copy =[
     'LICENSE',
     "README.md",
-    "req.txt"
+    "requirements.txt"
 ]
 
 shutil.rmtree("build",ignore_errors=True)
