@@ -11,11 +11,11 @@ logger = logging.getLogger("Dependency Checker")
 
 filename = Path(__file__)
 loader:SourceFileLoader = getattr(sys.modules['__main__'], '__loader__', None)
-meow = loader.get_data("requirements.txt").decode('utf-8')
+req = loader.get_data("requirements.txt").decode('utf-8')
 
 with tempfile.NamedTemporaryFile("w",delete=False) as f:
     try:
-        f.write(meow)
+        f.write(req)
         f.flush()
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", f.name])
         f.close()
