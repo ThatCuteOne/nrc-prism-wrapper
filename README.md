@@ -46,7 +46,6 @@ You may also want to checkout technicfans wrapper thats written in go(lang) [her
 - run arg for disabling jar injection
 - set dev enviroment via env variable
 - log steaming into modrinth app(if possible)
-- verfiy downloads by hash matching with maven repo(http://maven.norisk.gg/repository/norisk-production/gg/norisk/nrc-ui/1.0.78+fabric.1.21.7/nrc-ui-1.0.78+fabric.1.21.7.jar.md5/sha1/sha257/sha512) and modrinth
 
 
 #### Ideas
