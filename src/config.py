@@ -64,18 +64,23 @@ parser.add_argument("--prism-data-path",type=str,help="path to the dir that cont
 parser.add_argument("-p","--norisk-pack",type=str,help="Norisk pack to use:\n Avaliable Norisk packs: \"norisk-bughunter\", \"norisk-dev\" \"hypixel-skyblock\",\"mazerunner\", \"stupid-mod-ideas\", \"hide-and-seek\"")
 parser.add_argument("-m","--mc-version", type=str,help="Overrides the automatic minecraft version detection")
 parser.add_argument("-n","--nrc-mod-path", type=str,help="The path where the norisk client mods will be installed")
-
+parser.add_argument("-nv", "--no-hash-verification", action='store_true',help="Prevents crashes if the file hashes are mismatched (workaround for api bugs)",default=False)
 args, unknown_args = parser.parse_known_args()
 
 LAUNCHER = (
     args.launcher or                    
-    os.environ.get("LAUNCHER_TYPE") or  
+    os.environ.get("LAUNCHER_TYPE") or
     None
+)
+NO_HASH_VERIFICATION = (
+    args.no_hash_verification or
+    bool(os.environ.get("NO_HASH_VERIFICATION")) or
+    False
 )
 
 NRC_MOD_PATH = (
     args.nrc_mod_path or                    
-    os.environ.get("NRC_MOD_PATH") or  
+    os.environ.get("NRC_MOD_PATH") or
     "./mods/NoriskClient"
 )
 

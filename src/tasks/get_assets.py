@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 import hashlib
 import json
 import logging
@@ -14,23 +15,11 @@ logger = logging.getLogger("Assets")
 IGNORE_LIST = ["nrc-cosmetics/pack.mcmeta"]
 
 ASSET_PATH = "NoRiskClient/assets"
+os.makedirs(ASSET_PATH,exist_ok=True)
 
 
-try:
-    os.makedirs(ASSET_PATH,exist_ok=True)
-finally:
-    pass
-
+#TODO/CHORE expose this as setting
 concurrent_downloads = 20
-async def verify_asset(path,data):
-    file_path = Path(f"{ASSET_PATH}/{path}")
-    if file_path.is_file():
-        local_hash = await calc_hash(file_path)
-        if not local_hash == data.get("hash"):
-            return path, data
-    else:
-        return path, data
-
 
 async def calc_hash(file:Path):
     '''
@@ -95,42 +84,69 @@ async def injectIntoJar():
                 logger.error(f"Error updating JAR: {e}")
                 raise
 
+@dataclass
+class Assetfile():
+    path : str
+    sha : str
+    asset_id : str
+    size : int
+    is_verified = False
+
+    async def verify(self):
+        file_path = Path(f"{ASSET_PATH}/{self.path}")
+        if file_path.is_file():
+            local_hash = await calc_hash(file_path)
+            if not local_hash == self.sha:
+                self.is_verified = False
+                return False
+        else:
+            self.is_verified = False
+            return False
+        self.is_verified = True
+        return True
+
+    async def download(self,semaphore:asyncio.Semaphore=asyncio.Semaphore(10)):
+        url = f"https://cdn.norisk.gg/assets/{self.asset_id}/assets/{self.path}"
+        await api.download_file(url,f"{ASSET_PATH}/{self.path}",semaphore,target_hash=self.sha)
+
+    
 async def run(asset_packs):
     assets = list(set(asset_packs))
+
+    # get metadata
     tasks = []
-    logger.info(assets)
+    meta_data: dict[str, dict[str,Assetfile]] = {}
+
     for a in assets:
-        tasks.append(main(a))
-
+        tasks.append(get_metadata(a,meta_data))
     await asyncio.gather(*tasks)
+    assets.reverse()
+
+    master_assets:dict[str, Assetfile] = {}
+
+    # flatten asset tree
+    for assetpack in assets:
+        for id, resource in meta_data[assetpack].items():
+            master_assets[resource.path] = resource
 
 
-async def main(assetpack):
-    '''
-    Verifys and Downloads Assets
-    '''
-    
-    metadata = {}
-    metadata = {**metadata, **await api.get_asset_metadata(assetpack)}
-    logger.info("Verifying Assets")
-    verify_tasks = []
-    for name, asset_info in metadata.get("objects", {}).items():
-        if name not in IGNORE_LIST:
-            task = verify_asset(
-                name,
-                asset_info
-            )
-            verify_tasks.append(task)
-    results = await asyncio.gather(*verify_tasks)
-    downloads = [result for result in results if result is not None]
-
+    download_tasks = []
     semaphore = asyncio.Semaphore(concurrent_downloads)
-    tasks = []
-    for path, asset_data in downloads:
-        task = api.download_single_asset(assetpack,path,asset_data,semaphore)
-        tasks.append(task)
-    if tasks:
-        logger.info("Downloading missing")
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-    else:
-        logger.info("All assets are up to date")
+    for path, resource in master_assets.items():
+        if await resource.verify() or path in IGNORE_LIST: 
+            continue
+        download_tasks.append(resource.download(semaphore=semaphore))
+    
+    await asyncio.gather(*download_tasks)
+    
+
+async def get_metadata(asset_pack_name:str,metadata_dict:dict):
+    raw_metadata:dict = (await api.get_asset_metadata(asset_pack_name)).get("objects")
+    metadata_dict[asset_pack_name] = {}
+    for path, data in raw_metadata.items():
+        metadata_dict[asset_pack_name][path] = Assetfile(
+            path=path,
+            sha=data.get("hash",None),
+            asset_id=asset_pack_name,
+            size=data.get("size",1)
+        )

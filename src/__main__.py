@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-from pathlib import Path
-import tasks.get_dependencies as get_dependencies
-get_dependencies.check_dependencies()
+import tasks.get_dependencies  # noqa: F401
 import subprocess
 import config
 from networking import api
@@ -129,28 +127,14 @@ def main():
     new_cmd.append(f"-Dfabric.addMods={config.NRC_MOD_PATH}")
     new_cmd.extend(original_args[1:])
 
+
     try:
-        # windows log output workaround(i hate you billie)
-        # TODO for some reason the log reading is very slow and wierd but at least it works
+        logger.info("Starting Minecraft..")
         if sys.platform == "win32":
-            logger.warning("Using Windows log stream workaround... the log may be slow")
-            process = subprocess.Popen(
-                new_cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-            )
-            while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
-                    break
-                if output:
-                    print(output.strip())
-            sys.exit(process.returncode)
+            # windows log output workaround(i hate you billie)
+            new_cmd[0] = new_cmd[0].replace("javaw.exe","java.exe")
+            subprocess.run(new_cmd)
         else:
-            logger.info("Starting Minecraft..")
             os.execvp(new_cmd[0], new_cmd)
     except FileNotFoundError:
         print(f"ERROR: Command not found: {new_cmd[0]}", file=sys.stderr)
